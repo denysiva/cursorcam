@@ -20,7 +20,7 @@ export function Home() {
     e?.preventDefault();
     const clean = cleanRoomCode(code);
     if (clean.length < 3) {
-      toast("Введіть код кімнати", "error");
+      toast("Введи код кімнати", "error");
       return;
     }
     enterRoom(clean);

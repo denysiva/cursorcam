@@ -229,6 +229,47 @@ describe("a round", () => {
     expect(w.send("x", { t: "seat", team: turn === "sun" ? "moon" : "sun", role: "seeker" }).ok).toBe(false);
   });
 
+  it("benches an Oracle who is replaced mid-round, so the key never reaches a Seeker", () => {
+    const { w, oracle, seeker, cards, turn } = started();
+    w.send(oracle, { t: "clue", word: "небо", n: 3 });
+    w.send("", { t: "_presence", on: ["h", "s1", "s2", "m", "m1", "x"].filter((id) => id !== oracle) });
+    expect(w.send(seeker, { t: "seat", team: turn, role: "oracle" }).ok).toBe(true);
+    w.send("", { t: "_presence", on: ["h", "s1", "s2", "m", "m1", "x"] });
+    expect(w.state.players[oracle].team).toBeNull();
+    expect(w.send(oracle, { t: "pick", i: cards(turn)[0] }).ok).toBe(false);
+    expect(w.send(oracle, { t: "seat", team: turn, role: "seeker" }).ok).toBe(false);
+  });
+
+  it("does not let anyone change sides through the spectator bench", () => {
+    const { w, seeker, turn, other } = started();
+    expect(w.send(seeker, { t: "seat", team: null }).ok).toBe(true);
+    expect(w.send(seeker, { t: "seat", team: other, role: "seeker" }).ok).toBe(false);
+    expect(w.send(seeker, { t: "seat", team: turn, role: "seeker" }).ok).toBe(true);
+  });
+
+  it("refuses host actions aimed at ids that are not real players", () => {
+    const { w } = started();
+    for (const pid of [["s1"], "__proto__", "constructor", 7, null, { id: "s1" }]) {
+      expect(w.send("h", { t: "kick", pid }).ok).toBe(false);
+      expect(w.send("h", { t: "giveHost", pid }).ok).toBe(false);
+      expect(w.send("h", { t: "move", pid, team: "sun", role: "oracle" }).ok).toBe(false);
+    }
+    expect(({} as Record<string, unknown>).team).toBeUndefined();
+    expect(() => w.view("h")).not.toThrow();
+    expect(w.state.hostId).toBe("h");
+  });
+
+  it("counts the votes again when a voter drops out", () => {
+    const { w, oracle, cards, turn } = started({ pick: "vote" });
+    if (turn !== "sun") return; // Sun has the two Seekers this test needs
+    w.send(oracle, { t: "clue", word: "небо", n: 2 });
+    const target = cards(turn)[0]!;
+    w.send("s1", { t: "mark", i: target });
+    expect(w.state.game.revealed[target]).toBeNull();
+    w.send("", { t: "_presence", on: ["h", "s1", "m", "m1", "x"] });
+    expect(w.state.game.revealed[target]).toBe(turn);
+  });
+
   it("rotates Oracles for the next round and brings fresh words", () => {
     const { w, oracle, seeker, cards } = started();
     const firstWords: string[] = [...w.state.game.words];

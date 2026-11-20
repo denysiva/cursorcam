@@ -38,7 +38,7 @@ function Bye() {
   const reason = state.bye;
   const text =
     reason === "kicked"
-      ? "Ведучий прибрав тебе з кімнати. Буває."
+      ? "Тебе прибрали з кімнати. Буває."
       : reason === "left"
         ? "Ти більше не в цій кімнаті."
         : reason || "Кімната недоступна.";

@@ -98,7 +98,10 @@ export class Room extends DurableObject<Env> {
   private async save(state: LogicState, conns: Conns): Promise<void> {
     await this.ctx.storage.put({ state, conns });
     const endsAt = state.game?.endsAt ?? null;
-    if (typeof endsAt === "number") await this.ctx.storage.setAlarm(endsAt + ALARM_SLACK_MS);
+    // An empty room keeps no clock running; the deadline is re-armed (and, if
+    // it has passed, fires at once) when somebody comes back.
+    const anyone = Object.keys(conns).length > 0;
+    if (typeof endsAt === "number" && anyone) await this.ctx.storage.setAlarm(endsAt + ALARM_SLACK_MS);
     else await this.ctx.storage.deleteAlarm();
   }
 
@@ -258,10 +261,12 @@ export class Room extends DurableObject<Env> {
       return this.send([{ to: "*", data: { type: "react", from, emoji: msg.emoji } }]);
     }
 
+    // Hash before loading: nothing but storage may sit between load and save.
+    const joinId = msg.type === "join" ? await publicId(msg.playerId) : "";
     const { state, conns } = await this.load();
 
     if (msg.type === "join") {
-      const pid = await publicId(msg.playerId);
+      const pid = joinId;
       const action = {
         t: "_join",
         name: msg.name,

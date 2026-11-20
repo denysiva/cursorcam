@@ -376,6 +376,7 @@
   }
   .sheet {
     border-radius: 28px;
+    max-height: 84vh;
     max-height: 84dvh;
   }
   .sheet-tall {

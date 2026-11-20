@@ -192,6 +192,7 @@ html[data-turn="moon"] body::after {
 #app {
   position: relative;
   z-index: 1;
+  height: 100vh;
   height: 100dvh;
 }
 
@@ -571,6 +572,7 @@ img {
 .sheet {
   width: 100%;
   max-width: 560px;
+  max-height: 88vh;
   max-height: 88dvh;
   display: flex;
   flex-direction: column;
@@ -584,6 +586,7 @@ img {
   animation: sheet-up 0.34s var(--ease) both;
 }
 .sheet-tall {
+  height: 88vh;
   height: 88dvh;
 }
 .sheet-wrap.is-closing {
@@ -775,6 +778,7 @@ img {
   animation: pulse 1.6s ease-out infinite;
 }
 .boot {
+  height: 100vh;
   height: 100dvh;
   display: grid;
   place-items: center;

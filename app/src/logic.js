@@ -208,12 +208,15 @@ function startRound(s, now) {
     reason: null,
     // Everyone who has seen the key this round: they may not guess any more.
     sawKey: [],
+    // Which team each player belongs to for this round: no switching sides.
+    bound: {},
     awards: [],
   };
   for (const t of ["sun", "moon"]) {
     const o = oracleOf(s, t);
     if (o) s.game.sawKey.push(o.id);
   }
+  for (const p of Object.values(s.players)) if (p.team) s.game.bound[p.id] = p.team;
 }
 
 const left = (g, team) => g.key.reduce((n, t, i) => n + (t === team && !g.revealed[i] ? 1 : 0), 0);
@@ -463,7 +466,11 @@ function run(state, pid, a) {
   if (typeof a._rand === "number") s.seed = (s.seed ^ (a._rand >>> 0)) >>> 0;
   const me = s.players[pid];
   const g = s.game;
+  if (g && !g.bound) g.bound = {};
   const host = Boolean(me) && s.hostId === pid;
+  // Player ids arrive from the client in host actions: only real, own keys count.
+  const known = (id) => typeof id === "string" && Object.prototype.hasOwnProperty.call(s.players, id);
+  if (typeof pid !== "string") return fail("Невідома дія");
   const done = () => ({ ok: true, state: s });
 
   // ── server-only actions ──────────────────────────────────────────────────
@@ -494,6 +501,8 @@ function run(state, pid, a) {
     const on = new Set(Array.isArray(a.on) ? a.on : []);
     for (const p of Object.values(s.players)) p.online = on.has(p.id);
     ensureHost(s);
+    // Someone left mid-vote: the votes already cast may now be a majority.
+    if (s.phase === "play" && g.stage === "guess" && s.settings.pick === "vote") tallyVotes(s, now);
     return done();
   }
   if (a.t === "_timeout") {
@@ -528,15 +537,23 @@ function run(state, pid, a) {
           return done();
         }
         if (me.team && me.team !== team) return fail("Змінити команду можна після раунду");
+        if (g.bound[pid] && g.bound[pid] !== team) return fail("Змінити команду можна після раунду");
         if (role === "seeker") {
           if (saw) return fail("Ви вже бачили ключ цього раунду");
           seat(s, me, team, "seeker");
+          g.bound[pid] = team;
           return done();
         }
         const current = oracleOf(s, team);
         if (current && current.id !== pid && current.online) return fail("У цієї команди вже є Оракул");
-        if (current && current.id !== pid) current.role = "seeker";
+        if (current && current.id !== pid) {
+          // The Oracle being replaced knows the key: they sit the round out.
+          current.role = "seeker";
+          current.team = null;
+          delete g.marks[current.id];
+        }
         seat(s, me, team, "oracle");
+        g.bound[pid] = team;
         if (!saw) g.sawKey.push(pid);
         delete g.marks[pid];
         return done();
@@ -584,15 +601,17 @@ function run(state, pid, a) {
     }
     case "move": {
       if (!host) return fail("Це може лише ведучий");
+      if (!known(a.pid)) return fail("Гравця не знайдено");
       const p = s.players[a.pid];
-      if (!p) return fail("Гравця не знайдено");
       const team = a.team === null ? null : a.team;
       if (team !== null && !isTeam(team)) return fail("Невірна команда");
       const role = a.role === "oracle" ? "oracle" : "seeker";
       if (s.phase === "play") {
         const saw = g.sawKey.includes(p.id);
         if (p.team && team && p.team !== team) return fail("Змінити команду можна після раунду");
+        if (team && g.bound[p.id] && g.bound[p.id] !== team) return fail("Змінити команду можна після раунду");
         if (team && role === "seeker" && saw) return fail("Гравець уже бачив ключ цього раунду");
+        if (team) g.bound[p.id] = team;
         if (team === null && p.role === "oracle" && p.team) {
           return fail("Спершу призначте іншого Оракула");
         }
@@ -613,7 +632,7 @@ function run(state, pid, a) {
     case "kick": {
       if (!host) return fail("Це може лише ведучий");
       if (a.pid === pid) return fail("Себе видалити не можна");
-      if (!s.players[a.pid]) return fail("Гравця не знайдено");
+      if (!known(a.pid)) return fail("Гравця не знайдено");
       delete s.players[a.pid];
       s.order = s.order.filter((id) => id !== a.pid);
       if (g) delete g.marks[a.pid];
@@ -621,7 +640,7 @@ function run(state, pid, a) {
     }
     case "giveHost": {
       if (!host) return fail("Це може лише ведучий");
-      if (!s.players[a.pid]) return fail("Гравця не знайдено");
+      if (!known(a.pid)) return fail("Гравця не знайдено");
       s.hostId = a.pid;
       return done();
     }
@@ -681,6 +700,7 @@ function run(state, pid, a) {
     case "mark": {
       if (s.phase !== "play") return fail("Раунд не йде");
       if (me.team !== g.turn || me.role !== "seeker") return fail("Зараз не ваш хід");
+      if (g.sawKey.includes(pid)) return fail("Ви вже бачили ключ цього раунду");
       if (g.stage !== "guess") return fail("Чекаємо на знамення Оракула");
       const i = a.i;
       const vote = s.settings.pick === "vote";
@@ -698,6 +718,7 @@ function run(state, pid, a) {
     case "pick": {
       if (s.phase !== "play") return fail("Раунд не йде");
       if (me.team !== g.turn || me.role !== "seeker") return fail("Зараз не ваш хід");
+      if (g.sawKey.includes(pid)) return fail("Ви вже бачили ключ цього раунду");
       if (g.stage !== "guess") return fail("Чекаємо на знамення Оракула");
       if (s.settings.pick === "vote") return fail("У цьому режимі карту відкриває голосування");
       const i = a.i;
@@ -710,6 +731,7 @@ function run(state, pid, a) {
     case "pass": {
       if (s.phase !== "play") return fail("Раунд не йде");
       if (me.team !== g.turn || me.role !== "seeker") return fail("Зараз не ваш хід");
+      if (g.sawKey.includes(pid)) return fail("Ви вже бачили ключ цього раунду");
       if (g.stage !== "guess") return fail("Чекаємо на знамення Оракула");
       if (s.settings.pick === "vote") return fail("У цьому режимі хід завершує голосування");
       if (g.made < 1) return fail("Спершу відкрийте хоча б одну карту");

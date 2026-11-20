@@ -213,13 +213,17 @@ function digest(prev, next) {
   }
 
   let opened = null;
+  const news = [];
   ng.revealed.forEach((type, i) => {
-    if (type && !pg.revealed[i]) {
-      opened = { i, type, team: pg.turn, word: ng.words[i] };
-      state.fresh[i] = Date.now();
-      emit("reveal", opened);
-    }
+    if (type && !pg.revealed[i]) news.push(i);
   });
+  if (news.length === 1) {
+    const i = news[0];
+    opened = { i, type: ng.revealed[i], team: pg.turn, word: ng.words[i] };
+    state.fresh[i] = Date.now();
+    emit("reveal", opened);
+  }
+  // Several at once means we were away (a locked phone): show them quietly.
 
   if (next.phase === "over" && prev.phase !== "over") {
     clearTimeout(overTimer);
@@ -253,6 +257,8 @@ const PONG = "__pong";
 let socket = null;
 let retry = 0;
 let retryTimer = null;
+/** When the server last answered a ping: a socket can look open and be dead. */
+let lastPong = Date.now();
 
 function send(msg) {
   if (socket?.readyState === WebSocket.OPEN) socket.send(JSON.stringify(msg));
@@ -282,10 +288,12 @@ export function connect() {
 
   ws.addEventListener("open", () => {
     retry = 0;
+    lastPong = Date.now();
     join();
   });
 
   ws.addEventListener("message", (event) => {
+    lastPong = Date.now();
     if (event.data === PONG) return;
     let msg;
     try {
@@ -304,7 +312,8 @@ export function connect() {
     } else if (msg.type === "error") {
       if (msg.error === "join first") join();
       else {
-        toast(msg.error, "error");
+        // The rules answer in Ukrainian; anything else is plumbing.
+        toast(/[а-яіїєґ]/i.test(msg.error) ? msg.error : "Щось пішло не так. Спробуй ще раз", "error");
         emit("error");
       }
     } else if (msg.type === "react") {
@@ -340,6 +349,10 @@ export function leaveRoom({ tellServer = true } = {}) {
   state.bye = null;
   state.sheet = null;
   state.overShown = false;
+  state.announce = null;
+  state.fresh = {};
+  queue.length = 0;
+  clearTimeout(overTimer);
   history.replaceState(null, "", location.pathname + (ns ? `?as=${params.get("as")}` : ""));
   notify();
 }
@@ -360,7 +373,12 @@ export function roomLink() {
 
 // Keep the socket warm through idle periods (the server auto-answers these).
 setInterval(() => {
-  if (socket?.readyState === WebSocket.OPEN) socket.send(PING);
+  if (socket?.readyState !== WebSocket.OPEN) return;
+  if (Date.now() - lastPong > 60_000) {
+    socket.close();
+    return;
+  }
+  socket.send(PING);
 }, 25_000);
 
 // A phone that was locked comes back with a dead socket: reconnect at once.
@@ -369,6 +387,16 @@ document.addEventListener("visibilitychange", () => {
   if (!socket || socket.readyState > WebSocket.OPEN) {
     retry = 0;
     connect();
+    return;
+  }
+  // The socket claims to be open. Ask, and hang up if nobody answers.
+  if (socket.readyState === WebSocket.OPEN) {
+    const ws = socket;
+    const asked = Date.now();
+    ws.send(PING);
+    setTimeout(() => {
+      if (socket === ws && lastPong < asked) ws.close();
+    }, 3500);
   }
 });
 window.addEventListener("online", () => {

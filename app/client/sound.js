@@ -41,7 +41,8 @@ let touched = false;
 function unlock() {
   touched = true;
   const c = ensure();
-  if (c && c.state === "suspended") c.resume();
+  // iOS parks the context as "interrupted" after a lock or a call.
+  if (c && c.state !== "running") c.resume().catch(() => {});
   syncMusic();
 }
 for (const ev of ["pointerdown", "keydown", "touchend"]) {

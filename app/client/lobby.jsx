@@ -250,9 +250,9 @@ export function Lobby() {
             {view.ready ? view.ready : `Чекаємо, поки ${hostPlayer?.name || "ведучий"} почне гру`}
           </p>
         )}
-        {!host && hostPlayer && !hostPlayer.online && (
+        {!host && (!hostPlayer || !hostPlayer.online) && (
           <Btn kind="ghost" small block onClick={() => act({ t: "claimHost" })}>
-            Ведучий зник — взяти керування
+            Ведучого немає — взяти керування
           </Btn>
         )}
       </footer>

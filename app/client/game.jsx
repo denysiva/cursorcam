@@ -616,7 +616,7 @@ function Over({ view, my, onPeek }) {
         )}
         {!host && (!hostPlayer || !hostPlayer.online) && (
           <Btn kind="ghost" small block onClick={() => act({ t: "claimHost" })}>
-            Ведучий зник — взяти керування
+            Ведучого немає — взяти керування
           </Btn>
         )}
         <button class="link" onClick={onPeek}>

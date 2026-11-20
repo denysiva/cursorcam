@@ -593,7 +593,7 @@ function LogSheet() {
                 }
                 if (e.k === "pass") return <p class="log-note">{e.name ? `${e.name} завершує хід` : "Команда завершує хід"}</p>;
                 if (e.k === "timeout") return <p class="log-note">Час вийшов</p>;
-                if (e.k === "skip") return <p class="log-note">Ведучий пропустив хід</p>;
+                if (e.k === "skip") return <p class="log-note">Хід пропущено</p>;
                 return null;
               })}
             </div>

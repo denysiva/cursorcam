@@ -7,6 +7,7 @@
   position: relative;
   width: 100%;
   max-width: 560px;
+  height: 100vh;
   height: 100dvh;
   margin: 0 auto;
   display: flex;
@@ -306,9 +307,12 @@
   min-width: 0;
   padding: 10px;
   border-radius: 22px;
+  /* Plain fallbacks first: Safari before 16.2 drops any line with color-mix(). */
+  background: var(--panel);
   background:
     linear-gradient(180deg, color-mix(in srgb, var(--t2) 24%, transparent) 0%, transparent 46%),
     var(--panel);
+  box-shadow: inset 0 0 0 1px var(--t2);
   box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--t2) 42%, transparent);
   animation: rise 0.55s var(--ease) both;
   transition: box-shadow 0.3s;
