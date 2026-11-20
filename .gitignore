@@ -1,16 +1,10 @@
-node_modules/
-dist/
-release/
-coverage/
-*.tsbuildinfo
-*.tgz
-*.log
+node_modules
+dist
+.wrangler
+.dev.vars
 .DS_Store
-.env
-cursorcam-output/
-CLAUDE.local.md
-.claude/
-.next/
-out/
-.vercel/
-next-env.d.ts
+*.log
+
+# Raw generated art and audio (~45 MB). The shipped, optimised files live in
+# app/public; design/README.md records how the raw ones were made.
+design/raw

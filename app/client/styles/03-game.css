@@ -1,0 +1,1060 @@
+/* ── game: the column ─────────────────────────────────────────────────── */
+
+.game {
+  --col: 720px;
+  max-width: var(--col);
+  --t1: var(--sun-1);
+  --t2: var(--sun-2);
+  --t3: var(--sun-3);
+  --t-ink: var(--sun-ink);
+}
+.game.turn-moon {
+  --t1: var(--moon-1);
+  --t2: var(--moon-2);
+  --t3: var(--moon-3);
+  --t-ink: var(--moon-ink);
+}
+.game > .topbar {
+  order: 1;
+}
+.game > .banner {
+  order: 2;
+}
+.game > .board-wrap {
+  order: 3;
+}
+.game > .me-chip {
+  order: 4;
+}
+.game > .dock {
+  order: 5;
+}
+
+@media (min-width: 1000px) and (min-height: 640px) {
+  .game {
+    --col: 980px;
+  }
+}
+
+/* ── tally: cards left, like a scoreboard ─────────────────────────────── */
+
+.tally {
+  display: flex;
+  align-items: stretch;
+  height: 42px;
+  border-radius: 14px;
+  overflow: hidden;
+  background: rgba(8, 5, 20, 0.6);
+  box-shadow: inset 0 0 0 1px var(--line-soft);
+}
+.tally-side {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 0 13px;
+  transition: background 0.4s;
+  animation: tally-bump 0.5s var(--spring);
+}
+.tally-side b {
+  font: 400 25px/1 var(--f-display);
+  min-width: 0.62em;
+  text-align: center;
+}
+.tally-sun b {
+  color: var(--sun-1);
+}
+.tally-moon b {
+  color: var(--moon-1);
+}
+.tally-sun.is-on {
+  background: linear-gradient(90deg, rgba(255, 143, 63, 0.42), rgba(255, 143, 63, 0.08));
+}
+.tally-moon.is-on {
+  background: linear-gradient(270deg, rgba(111, 208, 230, 0.4), rgba(111, 208, 230, 0.08));
+}
+.tally-sun {
+  border-right: 1px solid var(--line-soft);
+}
+
+/* ── banner: what is happening ────────────────────────────────────────── */
+
+.banner {
+  flex: none;
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 72px;
+  margin: 8px 10px 8px;
+  padding: 9px 12px 9px 14px;
+  border-radius: 20px;
+  background:
+    linear-gradient(120deg, color-mix(in srgb, var(--t2) 30%, transparent) 0%, color-mix(in srgb, var(--t3) 10%, transparent) 60%, transparent 100%),
+    var(--panel);
+  box-shadow: inset 0 0 0 1.5px color-mix(in srgb, var(--t2) 55%, transparent);
+  transition: box-shadow 0.5s, background 0.5s;
+}
+.banner.is-mine {
+  box-shadow:
+    inset 0 0 0 2px var(--t2),
+    0 0 30px color-mix(in srgb, var(--t2) 34%, transparent);
+}
+.banner-moon,
+.banner-sun {
+  --t1: var(--sun-1);
+  --t2: var(--sun-2);
+  --t3: var(--sun-3);
+}
+.banner-moon {
+  --t1: var(--moon-1);
+  --t2: var(--moon-2);
+  --t3: var(--moon-3);
+}
+.banner-wait {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  animation: rise 0.4s var(--ease) both;
+}
+.banner-eyebrow {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font: 800 12px/1 var(--f-cond);
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--t1);
+}
+.banner-line {
+  margin-top: 5px;
+  font: 600 20px/1.12 var(--f-italic);
+  font-style: italic;
+  color: var(--cream);
+}
+.dots {
+  display: inline-flex;
+  gap: 3px;
+  margin-left: 5px;
+}
+.dots i {
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--t1);
+  animation: dot 1.2s ease-in-out infinite;
+}
+.dots i:nth-child(2) {
+  animation-delay: 0.15s;
+}
+.dots i:nth-child(3) {
+  animation-delay: 0.3s;
+}
+.banner-clue {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  animation: clue-in 0.5s var(--spring) both;
+}
+.banner-clue-main {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+.clue-word {
+  margin-top: 3px;
+  /* Yeseva capitals run about 0.74em wide; the number takes ~140px of the row. */
+  font: 400 min(34px, calc((min(100vw, var(--col, 720px)) - 142px) / var(--len) * 1.34)) / 1.08 var(--f-display);
+  letter-spacing: 0.02em;
+  color: var(--cream);
+  text-shadow: 0 0 22px color-mix(in srgb, var(--t2) 60%, transparent);
+  white-space: nowrap;
+}
+.clue-num {
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+}
+.clue-num b {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  font: 400 26px/1 var(--f-display);
+  color: var(--t-ink, var(--ink));
+  background: radial-gradient(circle at 35% 28%, #fff 0%, var(--t1) 28%, var(--t2) 78%);
+  box-shadow:
+    inset 0 -3px 0 rgba(0, 0, 0, 0.18),
+    0 0 0 2px rgba(0, 0, 0, 0.3),
+    0 0 22px color-mix(in srgb, var(--t2) 60%, transparent);
+}
+.clue-num span {
+  font: 700 11.5px/1 var(--f-cond);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--t1);
+  white-space: nowrap;
+}
+.timer {
+  position: absolute;
+  top: -11px;
+  right: 16px;
+  z-index: 2;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  height: 24px;
+  padding: 0 9px;
+  border-radius: 9px;
+  font: 800 16px/1 var(--f-cond);
+  letter-spacing: 0.05em;
+  font-variant-numeric: tabular-nums;
+  color: var(--cream);
+  background: #1a1233;
+  box-shadow: inset 0 0 0 1.5px color-mix(in srgb, var(--t2) 60%, transparent);
+}
+.timer.is-low {
+  color: #fff;
+  background: var(--ban-2);
+  box-shadow: inset 0 0 0 1px var(--ban-1), 0 0 18px rgba(255, 51, 85, 0.5);
+  animation: timer-low 1s ease-in-out infinite;
+}
+
+/* ── board ────────────────────────────────────────────────────────────── */
+
+.board-wrap {
+  flex: 1 1 0;
+  min-height: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 8px;
+}
+.board {
+  --gap: clamp(4px, 1.5vw, 8px);
+  display: grid;
+  grid-template-columns: repeat(var(--cols), minmax(0, 1fr));
+  grid-template-rows: repeat(var(--rows), minmax(0, 1fr));
+  gap: var(--gap);
+  width: 100%;
+  height: 100%;
+  /* Cards never grow taller than ~1.36× their width, however tall the phone. */
+  max-height: calc((min(100vw, var(--col)) - 16px) / var(--cols) * 1.36 * var(--rows));
+  perspective: 1100px;
+}
+
+.card {
+  position: relative;
+  display: block;
+  min-width: 0;
+  min-height: 0;
+  border-radius: 11px;
+  transform-style: preserve-3d;
+  transition:
+    transform 0.2s var(--spring),
+    filter 0.4s;
+}
+.board.is-dealt .card {
+  animation: deal 0.6s var(--spring) both;
+  animation-delay: calc(var(--i) * 34ms + 260ms);
+}
+.card-flip {
+  position: absolute;
+  inset: 0;
+  display: block;
+  border-radius: inherit;
+  transform-style: preserve-3d;
+  transition: transform 0.62s cubic-bezier(0.3, 1.25, 0.4, 1);
+}
+.card.is-open .card-flip {
+  transform: rotateY(180deg);
+}
+.card-face {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: inherit;
+  overflow: hidden;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+/* The word side: ivory card stock with a double ruled border. */
+.card-front {
+  --paper-a: #fcf4de;
+  --paper-b: #f0e0b9;
+  --paper-c: #dfc995;
+  --rule: rgba(152, 104, 34, 0.6);
+  --word: #1c1236;
+  padding: 3px;
+  background:
+    radial-gradient(120% 80% at 30% 0%, rgba(255, 255, 255, 0.75), transparent 55%),
+    linear-gradient(165deg, var(--paper-a) 0%, var(--paper-b) 58%, var(--paper-c) 100%);
+  box-shadow:
+    inset 0 0 0 1px var(--rule),
+    inset 0 0 0 3px var(--paper-a),
+    inset 0 0 0 4px color-mix(in srgb, var(--rule) 55%, transparent),
+    0 2px 0 #a88a52,
+    0 7px 14px rgba(0, 0, 0, 0.5);
+  color: var(--word);
+}
+.card-word {
+  display: block;
+  max-width: 100%;
+  padding: 0 2px;
+  font: 800 var(--fs, 14px) / 1.02 var(--f-cond);
+  letter-spacing: 0.012em;
+  text-transform: uppercase;
+  text-align: center;
+  overflow-wrap: normal;
+  word-break: keep-all;
+}
+.card-keymark {
+  position: absolute;
+  top: 5px;
+  left: 6px;
+  line-height: 0;
+  opacity: 0.9;
+}
+.card-keymark .glyph {
+  color: currentColor;
+}
+
+/* What only an Oracle sees: every card tinted by its owner. */
+.card.key-sun .card-front {
+  --paper-a: #fff0c9;
+  --paper-b: #ffc170;
+  --paper-c: #ff9347;
+  --rule: rgba(143, 47, 12, 0.6);
+  --word: #4a1702;
+}
+.card.key-moon .card-front {
+  --paper-a: #eafcfd;
+  --paper-b: #a6e1f1;
+  --paper-c: #8a9df4;
+  --rule: rgba(38, 52, 143, 0.55);
+  --word: #0a1f4d;
+}
+.card.key-bot .card-front {
+  --paper-a: #e9e2d2;
+  --paper-b: #cfc5b0;
+  --paper-c: #b3a890;
+  --rule: rgba(90, 80, 60, 0.45);
+  --word: #564d3c;
+}
+.card.key-ban .card-front {
+  --paper-a: #3a1524;
+  --paper-b: #170a14;
+  --paper-c: #08040a;
+  --rule: rgba(255, 51, 85, 0.85);
+  --word: #ff5773;
+  background: linear-gradient(165deg, var(--paper-a) 0%, var(--paper-b) 58%, var(--paper-c) 100%);
+  box-shadow:
+    inset 0 0 0 1.5px var(--rule),
+    inset 0 0 0 3px #170a14,
+    inset 0 0 0 4px rgba(255, 51, 85, 0.35),
+    0 2px 0 #3a0a14,
+    0 0 16px rgba(255, 51, 85, 0.35),
+    0 7px 14px rgba(0, 0, 0, 0.5);
+}
+
+/* The picture side. */
+.card-back {
+  transform: rotateY(180deg);
+  background: #120b24;
+  box-shadow:
+    inset 0 0 0 1.5px var(--edge, var(--gold-3)),
+    0 2px 0 rgba(0, 0, 0, 0.5),
+    0 6px 12px rgba(0, 0, 0, 0.45);
+}
+.card-back img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.card-back::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(180deg, transparent 52%, rgba(8, 4, 18, 0.9) 100%);
+  box-shadow: inset 0 0 0 1.5px var(--edge, var(--gold-3));
+}
+.card-back-word {
+  position: absolute;
+  left: 2px;
+  right: 2px;
+  bottom: 3px;
+  z-index: 1;
+  font: 800 calc(var(--fs, 14px) * 0.62) / 1 var(--f-cond);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  text-align: center;
+  color: var(--cream);
+  opacity: 0.86;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.back-sun {
+  --edge: var(--sun-2);
+}
+.back-moon {
+  --edge: var(--moon-2);
+}
+.back-bot {
+  --edge: var(--bot-2);
+}
+.back-ban {
+  --edge: var(--ban-1);
+}
+/* Opened cards step back so the words still in play stay in front. */
+.card.is-open:not(.is-fresh) {
+  filter: saturate(0.82) brightness(0.8);
+}
+.card.open-bot:not(.is-fresh) {
+  filter: saturate(0.5) brightness(0.62);
+}
+.card.is-fresh {
+  z-index: 5;
+  animation: reveal-lift 0.9s var(--ease) both;
+}
+.card.is-fresh .card-back::before {
+  content: "";
+  position: absolute;
+  inset: -40%;
+  z-index: 2;
+  background: linear-gradient(110deg, transparent 42%, rgba(255, 255, 255, 0.85) 50%, transparent 58%);
+  animation: glint 0.9s ease-out 0.45s both;
+}
+
+.card.can-tap {
+  cursor: pointer;
+}
+.card.can-tap:active {
+  transform: scale(0.94);
+}
+.card.is-marked {
+  z-index: 4;
+  transform: translateY(-4px) scale(1.06);
+}
+.card.is-marked .card-front {
+  box-shadow:
+    inset 0 0 0 1px var(--rule),
+    inset 0 0 0 3px var(--paper-a),
+    0 0 0 3px var(--t2),
+    0 0 26px color-mix(in srgb, var(--t2) 75%, transparent),
+    0 10px 18px rgba(0, 0, 0, 0.5);
+  animation: marked 1.4s ease-in-out infinite;
+}
+.card.is-dim {
+  filter: saturate(0.7) brightness(0.55);
+}
+.board.is-over .card.is-open:not(.is-fresh) {
+  filter: none;
+}
+
+.card-marks {
+  position: absolute;
+  top: -5px;
+  right: -4px;
+  z-index: 6;
+  display: flex;
+  align-items: center;
+  pointer-events: none;
+}
+.card-marks .avatar {
+  margin-left: -7px;
+  box-shadow: 0 0 0 1.5px var(--t2), 0 2px 5px rgba(0, 0, 0, 0.5);
+  animation: pop 0.3s var(--spring) both;
+}
+.card-votes {
+  margin-left: 2px;
+  padding: 2px 4px;
+  border-radius: 7px;
+  font: 800 11px/1 var(--f-cond);
+  color: var(--t-ink);
+  background: var(--t1);
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.5);
+}
+
+/* ── role chip ────────────────────────────────────────────────────────── */
+
+.me-chip {
+  flex: none;
+  align-self: center;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 30px;
+  margin: 8px 0 6px;
+  padding: 0 4px 0 12px;
+  border-radius: 20px;
+  font: 800 13px/1 var(--f-cond);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--cream-2);
+  background: rgba(8, 5, 20, 0.55);
+  box-shadow: inset 0 0 0 1px var(--line-soft);
+}
+.game.my-sun .me-chip {
+  box-shadow: inset 0 0 0 1px rgba(255, 143, 63, 0.55);
+}
+.game.my-moon .me-chip {
+  box-shadow: inset 0 0 0 1px rgba(111, 208, 230, 0.55);
+}
+.me-chip-log {
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  margin-left: 4px;
+  border-radius: 50%;
+  color: var(--gold-2);
+  background: rgba(255, 255, 255, 0.08);
+}
+
+/* ── dock in play ─────────────────────────────────────────────────────── */
+
+.dock-sun,
+.dock-moon {
+  box-shadow:
+    inset 0 2px 0 var(--t2),
+    0 -12px 44px color-mix(in srgb, var(--t2) 28%, transparent);
+}
+.dock-status {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 22px;
+  font: 600 17.5px/1.15 var(--f-italic);
+  font-style: italic;
+  color: var(--cream-2);
+  text-align: center;
+}
+.dock-prompt {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 54px;
+  padding: 0 14px;
+  border-radius: 17px;
+  font: 600 15.5px/1.2 var(--f-body);
+  color: var(--cream-2);
+  border: 1.5px dashed color-mix(in srgb, var(--t2) 55%, transparent);
+}
+.tap-dot {
+  flex: none;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--t2);
+  box-shadow: 0 0 0 0 color-mix(in srgb, var(--t2) 70%, transparent);
+  animation: tap 1.5s ease-out infinite;
+}
+.btn-open {
+  animation: pop 0.28s var(--spring) both;
+}
+.vote-box {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  column-gap: 10px;
+  min-height: 54px;
+  padding: 6px 14px;
+  border-radius: 17px;
+  background: color-mix(in srgb, var(--t2) 18%, transparent);
+  box-shadow: inset 0 0 0 1.5px var(--t2);
+  animation: pop 0.28s var(--spring) both;
+}
+.vote-box span {
+  font: 800 11.5px/1 var(--f-cond);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--t1);
+}
+.vote-box b {
+  grid-row: 2;
+  font: 800 22px/1.05 var(--f-cond);
+  letter-spacing: 0.04em;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.vote-box i {
+  grid-row: 1 / span 2;
+  grid-column: 2;
+  font: 400 22px/1 var(--f-display);
+  font-style: normal;
+  color: var(--t1);
+  white-space: nowrap;
+}
+
+.reactions {
+  display: flex;
+  justify-content: space-between;
+  gap: 4px;
+}
+.reaction {
+  flex: 1 1 0;
+  max-width: 54px;
+  height: 46px;
+  border-radius: 14px;
+  font-size: 24px;
+  line-height: 1;
+  background: rgba(255, 255, 255, 0.05);
+  box-shadow: inset 0 0 0 1px var(--line-soft);
+  transition: transform 0.14s var(--spring), background 0.2s;
+}
+.reaction:active {
+  transform: scale(1.28) translateY(-6px);
+  background: rgba(255, 255, 255, 0.14);
+}
+
+/* ── giving an omen ───────────────────────────────────────────────────── */
+
+.clue-wrap {
+  position: fixed;
+  inset: 0;
+  z-index: 65;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding: calc(10px + var(--safe-t)) 10px 10px;
+  background: rgba(6, 3, 16, 0.55);
+  animation: fade-in 0.2s ease both;
+}
+.clue-sheet {
+  --t1: var(--sun-1);
+  --t2: var(--sun-2);
+  width: 100%;
+  max-width: 520px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 14px 16px 16px;
+  border-radius: 26px;
+  background:
+    radial-gradient(120% 70% at 50% 0%, color-mix(in srgb, var(--t2) 30%, transparent), transparent 70%),
+    var(--panel-solid);
+  box-shadow:
+    inset 0 0 0 1.5px color-mix(in srgb, var(--t2) 60%, transparent),
+    0 24px 70px rgba(0, 0, 0, 0.7);
+  animation: drop-in 0.36s var(--spring) both;
+}
+.clue-sheet-moon {
+  --t1: var(--moon-1);
+  --t2: var(--moon-2);
+}
+.clue-sheet header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.clue-sheet h2 {
+  font: 400 23px/1 var(--f-display);
+  color: var(--t1);
+}
+.clue-input {
+  height: 64px;
+  padding: 0 12px;
+  text-align: center;
+  font: 400 30px/1 var(--f-display);
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+.clue-input::placeholder {
+  font: 800 22px/1 var(--f-cond);
+  letter-spacing: 0.16em;
+}
+.num-grid {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 7px;
+}
+.num {
+  height: 46px;
+  border-radius: 13px;
+  font: 400 22px/1 var(--f-display);
+  color: var(--cream);
+  background: rgba(8, 5, 20, 0.55);
+  box-shadow: inset 0 0 0 1px var(--line-soft);
+  transition: all 0.16s var(--spring);
+}
+.num:nth-child(10),
+.num:nth-child(11) {
+  color: var(--dim);
+}
+.num.is-on {
+  transform: scale(1.1);
+  color: var(--ink);
+  background: radial-gradient(circle at 35% 25%, #fff, var(--t1) 35%, var(--t2));
+  box-shadow: 0 0 20px color-mix(in srgb, var(--t2) 60%, transparent);
+}
+.clue-help {
+  font: 500 13px/1.3 var(--f-body);
+  color: var(--dim);
+  text-align: center;
+}
+
+/* ── the announcement band ────────────────────────────────────────────── */
+
+.announce {
+  --t1: var(--sun-1);
+  --t2: var(--sun-2);
+  --t3: var(--sun-3);
+  --t-ink: var(--sun-ink);
+  position: fixed;
+  inset: 0;
+  z-index: 45;
+  display: grid;
+  place-items: center;
+  pointer-events: none;
+  background: radial-gradient(ellipse at center, rgba(6, 3, 16, 0.72), rgba(6, 3, 16, 0.2) 70%);
+  animation: ann-veil var(--ms) ease both;
+}
+.announce-moon {
+  --t1: var(--moon-1);
+  --t2: var(--moon-2);
+  --t3: var(--moon-3);
+  --t-ink: var(--moon-ink);
+}
+.announce-band {
+  position: relative;
+  width: 120%;
+  padding: 22px 16% 24px;
+  text-align: center;
+  transform: rotate(-3deg);
+  background: linear-gradient(90deg, var(--t3) 0%, var(--t2) 28%, var(--t1) 50%, var(--t2) 72%, var(--t3) 100%);
+  box-shadow:
+    0 0 0 3px rgba(0, 0, 0, 0.35),
+    0 0 0 5px var(--gold-2),
+    0 0 80px color-mix(in srgb, var(--t2) 70%, transparent),
+    0 30px 60px rgba(0, 0, 0, 0.6);
+  color: var(--t-ink);
+  animation: ann-band var(--ms) cubic-bezier(0.2, 0.9, 0.2, 1) both;
+}
+.announce-band::before {
+  content: "";
+  position: absolute;
+  inset: 5px 0;
+  border-top: 1.5px solid rgba(0, 0, 0, 0.28);
+  border-bottom: 1.5px solid rgba(0, 0, 0, 0.28);
+}
+.ann-eyebrow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font: 800 15px/1 var(--f-cond);
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  opacity: 0.82;
+}
+.ann-eyebrow .glyph,
+.ann-title .glyph {
+  color: currentColor;
+}
+.ann-title {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  margin-top: 6px;
+  font: 400 clamp(32px, 9.5vw, 54px) / 1 var(--f-display);
+}
+.ann-word {
+  margin-top: 6px;
+  font: 400 min(72px, calc(84vw / var(--len) * 1.45)) / 1 var(--f-display);
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}
+.ann-word span {
+  display: inline-block;
+  animation: letter 0.5s var(--spring) both;
+  animation-delay: calc(var(--i) * 40ms + 180ms);
+}
+.ann-num {
+  margin-top: 8px;
+}
+.ann-num b {
+  display: inline-grid;
+  place-items: center;
+  width: 54px;
+  height: 54px;
+  border-radius: 50%;
+  font: 400 32px/1 var(--f-display);
+  color: var(--t1);
+  background: var(--t-ink);
+  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.4);
+  animation: pop 0.45s var(--spring) both 0.5s;
+}
+
+/* ── end of the round ─────────────────────────────────────────────────── */
+
+.over {
+  --t1: var(--sun-1);
+  --t2: var(--sun-2);
+  --t3: var(--sun-3);
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: flex;
+  justify-content: center;
+  overflow-y: auto;
+  padding: calc(14px + var(--safe-t)) 14px calc(14px + var(--safe-b));
+  background: rgba(6, 3, 16, 0.8);
+  backdrop-filter: blur(7px);
+  -webkit-backdrop-filter: blur(7px);
+  animation: fade-in 0.5s ease both;
+}
+.over-moon {
+  --t1: var(--moon-1);
+  --t2: var(--moon-2);
+  --t3: var(--moon-3);
+}
+.over-card {
+  position: relative;
+  width: 100%;
+  max-width: 460px;
+  margin: auto 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 0 18px 14px;
+  text-align: center;
+}
+.over-art {
+  position: relative;
+  width: min(50vw, 220px, 27dvh);
+  aspect-ratio: 1;
+  margin: 6px 0;
+  animation: over-art 0.9s var(--spring) both 0.1s;
+}
+.over-art img {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  object-fit: cover;
+  box-shadow:
+    0 0 0 3px var(--t2),
+    0 0 0 7px rgba(0, 0, 0, 0.4),
+    0 0 70px color-mix(in srgb, var(--t2) 70%, transparent);
+}
+.over-rays {
+  position: absolute;
+  inset: -55%;
+  background: repeating-conic-gradient(from 0deg, color-mix(in srgb, var(--t2) 42%, transparent) 0deg 6deg, transparent 6deg 18deg);
+  -webkit-mask-image: radial-gradient(circle, #000 20%, transparent 66%);
+  mask-image: radial-gradient(circle, #000 20%, transparent 66%);
+  animation: spin 26s linear infinite;
+}
+.over-eyebrow {
+  font: 800 14px/1 var(--f-cond);
+  letter-spacing: 0.26em;
+  text-transform: uppercase;
+  color: var(--t1);
+  animation: rise 0.5s var(--ease) both 0.35s;
+}
+.over-title {
+  font: 400 clamp(34px, 10.5vw, 50px) / 1 var(--f-display);
+  background: linear-gradient(180deg, #fff 0%, var(--t1) 40%, var(--t2) 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  filter: drop-shadow(0 0 26px color-mix(in srgb, var(--t2) 60%, transparent));
+  animation: rise 0.6s var(--ease) both 0.45s;
+}
+.over-reason {
+  font: 600 20px/1.2 var(--f-italic);
+  font-style: italic;
+  color: var(--cream-2);
+  animation: rise 0.6s var(--ease) both 0.55s;
+}
+.over-score {
+  margin: 6px 0 2px;
+  padding: 8px 20px;
+  border-radius: 18px;
+  background: rgba(8, 5, 20, 0.6);
+  box-shadow: inset 0 0 0 1px var(--line);
+  animation: rise 0.6s var(--ease) both 0.65s;
+}
+.awards {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 4px 0;
+}
+.award {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 9px 12px;
+  border-radius: 15px;
+  text-align: left;
+  background: rgba(255, 255, 255, 0.05);
+  box-shadow: inset 0 0 0 1px var(--line-soft);
+  animation: rise 0.5s var(--ease) both;
+  animation-delay: calc(var(--i) * 110ms + 800ms);
+}
+.award-icon {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  color: var(--gold-ink);
+  background: linear-gradient(180deg, #fff3c4, #e2b356);
+}
+.award-ban .award-icon {
+  color: #fff;
+  background: linear-gradient(180deg, #ff5a76, #a3142f);
+}
+.award b {
+  display: block;
+  font: 800 13px/1 var(--f-cond);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--gold-2);
+}
+.award p {
+  margin-top: 3px;
+  font: 600 15px/1.2 var(--f-body);
+  color: var(--cream);
+}
+.over-actions {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 8px;
+  animation: rise 0.6s var(--ease) both 1.1s;
+}
+
+/* ── keyframes ────────────────────────────────────────────────────────── */
+
+@keyframes tally-bump {
+  0% {
+    transform: scale(1.35);
+  }
+}
+@keyframes dot {
+  0%,
+  100% {
+    opacity: 0.25;
+    transform: translateY(0);
+  }
+  40% {
+    opacity: 1;
+    transform: translateY(-3px);
+  }
+}
+@keyframes clue-in {
+  from {
+    opacity: 0;
+    transform: scale(0.86);
+  }
+}
+@keyframes timer-low {
+  50% {
+    transform: scale(1.1);
+  }
+}
+@keyframes deal {
+  from {
+    opacity: 0;
+    transform: translateY(-46px) rotateX(75deg) scale(0.6);
+  }
+}
+@keyframes reveal-lift {
+  0% {
+    transform: scale(1);
+  }
+  35% {
+    transform: scale(1.22) translateY(-6px);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+@keyframes glint {
+  from {
+    transform: translateX(-70%);
+  }
+  to {
+    transform: translateX(70%);
+  }
+}
+@keyframes marked {
+  50% {
+    box-shadow:
+      inset 0 0 0 1px var(--rule),
+      inset 0 0 0 3px var(--paper-a),
+      0 0 0 3px var(--t1),
+      0 0 38px var(--t2),
+      0 10px 18px rgba(0, 0, 0, 0.5);
+  }
+}
+@keyframes tap {
+  to {
+    box-shadow: 0 0 0 14px transparent;
+  }
+}
+@keyframes drop-in {
+  from {
+    opacity: 0;
+    transform: translateY(-30px) scale(0.94);
+  }
+}
+@keyframes ann-veil {
+  0% {
+    opacity: 0;
+  }
+  12%,
+  82% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+@keyframes ann-band {
+  0% {
+    transform: rotate(-3deg) translateX(-115%);
+  }
+  16% {
+    transform: rotate(-3deg) translateX(0);
+  }
+  82% {
+    transform: rotate(-3deg) translateX(1.5%);
+  }
+  100% {
+    transform: rotate(-3deg) translateX(118%);
+  }
+}
+@keyframes letter {
+  from {
+    opacity: 0;
+    transform: translateY(28px) scale(0.5) rotate(8deg);
+  }
+}
+@keyframes over-art {
+  from {
+    opacity: 0;
+    transform: scale(0.4) rotate(-12deg);
+  }
+}

@@ -1,104 +1,54 @@
-<div align="center">
+# Оракул
 
-<h1>
-  <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="./assets/logo-wordmark-dark.svg" />
-    <img alt="CursorCam" src="./assets/logo-wordmark-light.svg" height="64" />
-  </picture>
-</h1>
+Командна гра натяків для компанії. Дві команди, Сонце і Місяць, шукають свої слова на спільному полі. У кожної команди є Оракул: лише він бачить, які слова чиї, і дає «знамення», одне слово та число. Решта команди, Шукачі, відкривають карти. Відкрив карту БАН — команда миттєво програла.
 
-**Ask your AI agent for a demo video.** It clicks through your web app and hands back a polished MP4 that zooms in on each click. Works with any AI agent, or on its own as a CLI.
+Грають усі разом зі своїх телефонів: ведучий створює кімнату, решта заходять за QR-кодом або чотирилітерним кодом.
 
-[Website](https://cursorcam.vercel.app) &nbsp;·&nbsp; [Changelog](./CHANGELOG.md) &nbsp;·&nbsp; [Contributing](./CONTRIBUTING.md)
+**Гра:** https://orakul.higgsfield.app
 
-<p>
-  <a href="https://www.npmjs.com/package/cursorcam"><img alt="npm" src="https://shieldcn.dev/npm/v/cursorcam.svg?variant=secondary&size=xs&theme=zinc" /></a>
-  <a href="https://github.com/Avijit07x/cursorcam/stargazers"><img alt="GitHub stars" src="https://shieldcn.dev/github/stars/Avijit07x/cursorcam.svg?variant=secondary&size=xs&theme=zinc" /></a>
-  <a href="https://github.com/Avijit07x/cursorcam/graphs/contributors"><img alt="Contributors" src="https://shieldcn.dev/github/contributors/Avijit07x/cursorcam.svg?variant=secondary&size=xs&theme=zinc" /></a>
-  <a href="https://github.com/Avijit07x/cursorcam/commits"><img alt="Last commit" src="https://shieldcn.dev/github/last-commit/Avijit07x/cursorcam.svg?variant=secondary&size=xs&theme=zinc" /></a>
-  <a href="./LICENSE"><img alt="License Apache-2.0" src="https://shieldcn.dev/github/license/Avijit07x/cursorcam.svg?variant=secondary&size=xs&theme=zinc" /></a>
-</p>
+## Що вміє
 
-</div>
+- Кімнати з миттєвою синхронізацією, до 60 людей в одній. Перезавантажив сторінку чи заблокував телефон — повертаєшся на своє місце.
+- Лобі з командами, ролями, перемішуванням команд, передачею керування.
+- Поле на 20, 25 або 30 карт, від однієї до трьох карт БАН.
+- Два способи відкривати карту: «хто перший» або голосування більшістю (для великих команд).
+- Таймер на хід із бонусом за влучання.
+- Набори слів «Класика», «Україна», «Офіс і діджитал» плюс власний список слів ведучого. Обрані набори діляться полем порівну.
+- Рахунок між раундами, зміна Оракулів по колу, нагороди раунду, журнал ходів.
+- Реакції, звуки, вібрація, фонова музика (вимкнена за замовчуванням).
 
-<a href="./assets/demo.mp4"><img alt="A video made with CursorCam: in a sample issue tracker it creates an issue with a title, description, priority and assignee, opens it and posts a comment, zooming in where each action happens" src="./assets/demo.webp" width="100%" /></a>
+## Як влаштовано
 
-<p align="center"><sub>Made with CursorCam from 13 steps. <a href="./assets/demo.mp4">Watch the full-quality MP4</a> (1080p, 60 fps).</sub></p>
+Усе живе в `app/`: це один Cloudflare Worker з Durable Object на кожну кімнату, розгорнутий на Higgsfield.
 
----
-
-## Setup
-
-**You need** Node.js 22.13+ and Chrome, Edge, Chromium or Brave 120+. CursorCam uses the browser you already have and downloads nothing.
-
-**Install it in your agent:**
-
-| Agent | Install |
+| Шлях | Що це |
 | --- | --- |
-| Claude Code | `/plugin marketplace add Avijit07x/cursorcam`, then `/plugin install cursorcam@cursorcam` and `/reload-plugins` |
-| Codex | `codex plugin marketplace add Avijit07x/cursorcam`, then `codex plugin add cursorcam@cursorcam` |
-| VS Code and GitHub Copilot | Add `Avijit07x/cursorcam` to `chat.plugins.marketplaces`, then install it from `@agentPlugins` |
-| Gemini CLI | `gemini extensions install https://github.com/Avijit07x/cursorcam` |
-| Cursor | [One-click MCP install](./docs/agents.md#cursor) |
-| Claude Desktop | Open [`cursorcam.mcpb`](https://github.com/Avijit07x/cursorcam/releases/latest/download/cursorcam.mcpb) |
-| Any other app | The MCP server, `npx -y cursorcam mcp`. See the [MCP guide](./docs/mcp.md) |
+| `app/src/logic.js` | Правила гри і набори слів. Чисті функції без годинника та випадковості. |
+| `app/src/room.ts` | Кімната: сокети, збереження стану, таймер ходу, хто що бачить. |
+| `app/src/protocol.ts` | Перевірка всього, що надходить від браузера. |
+| `app/client/` | Інтерфейс (Preact, без залежностей з npm: бібліотеки лежать у `client/vendor`). |
+| `app/client/styles/` | Стилі, склеюються в один файл під час збірки. |
+| `app/public/` | Шрифти, ілюстрації, звуки, `index.html`. |
+| `app/tests/` | Тести правил і кімнати в справжньому середовищі Workers. |
+| `design/` | Як зроблені ілюстрації та звуки, скрипт їх обробки. |
 
-[Your AI agent](./docs/agents.md) has each one step by step.
+Ключ (яка карта чия) сервер надсилає лише Оракулам. Браузер представляється секретним токеном, а в гру потрапляє його хеш, тому знати чужий ідентифікатор недостатньо, щоб зайти під чужим імʼям.
 
-**Then ask for a video:**
+## Команди
 
-```
-Make a 20 second demo of http://localhost:3000: sign up and create a project.
-```
-
-You get `video.mp4` (1080p, 60 fps) and a `poster.jpg` thumbnail in a run folder inside `cursorcam-output/`. Add that folder to `.gitignore`.
-
-## How it works
-
-Your agent explores your app, writes the steps and records them in a hidden browser. Then it checks stills of the video and fixes anything that looks wrong.
-
-If it needs a login or a 2FA code, it asks you. What you type is used for that run only and never saved.
-
-## Use the CLI
-
-The MCP server and the plugins run the `cursorcam` CLI. You can run it yourself too:
+Потрібен [Bun](https://bun.sh). Усе запускається з `app/`.
 
 ```bash
-npx cursorcam doctor
-npx cursorcam run steps.json
+bun install
+bun run build     # перевірка правил → типи → збірка в dist/
+bun run dev       # локальний сервер (після build), http://localhost:8787
+bun run test      # тести
 ```
 
-```json
-{
-  "url": "http://localhost:3000",
-  "steps": [
-    { "click": "role=button[name='Get started']" },
-    { "type": "alex@example.com", "into": "label=Email" },
-    { "press": "Enter" },
-    { "waitFor": "text=Dashboard" }
-  ]
-}
-```
+Щоб спробувати гру наодинці, відкрий кілька вкладок з різним `as`: `/?r=TEST&as=1`, `/?r=TEST&as=2` і так далі. Кожна вкладка стане окремим гравцем.
 
-## Docs
+## Як додати слова
 
-| Guide | Covers |
-| --- | --- |
-| [Getting started](./docs/getting-started.md) | Set up CursorCam and make your first video |
-| [Your AI agent](./docs/agents.md) | Install it in Claude Code, Codex, VS Code, Gemini CLI, Cursor or Claude Desktop |
-| [MCP server](./docs/mcp.md) | Set it up by hand in any MCP app, and every tool it offers |
-| [Better videos](./docs/better-videos.md) | How to ask your AI agent, with example requests and tips |
-| [Steps file](./docs/steps.md) | Every action, target and option |
-| [Look and size](./docs/style.md) | Presets for X, LinkedIn, YouTube and Discord, formats, backgrounds and zoom |
-| [Logins and secrets](./docs/logins.md) | Passwords, 2FA codes and saved logins |
-| [CLI](./docs/cli.md) | Every command, the run folder and exit codes |
-| [Troubleshooting](./docs/troubleshooting.md) | Common errors and how to fix them |
-| [Examples](./docs/examples/) | Steps and style files to copy and edit |
+Набори слів лежать у кінці `app/src/logic.js`, в обʼєкті `PACKS`. Слова розділяються пробілами, два слова на одній карті пишуться через підкреслення: `НОВА_ПОШТА`. Новий набір — це новий запис з `name`, `note` і `words`; у налаштуваннях гри він зʼявиться сам.
 
-## Contributing
-
-Bug reports and pull requests are welcome. See [CONTRIBUTING.md](./CONTRIBUTING.md). To report a security problem, see [SECURITY.md](./SECURITY.md).
-
-## License
-
-[Apache-2.0](./LICENSE)
+Без програміста: ведучий може вставити власний список у «Налаштування гри → Свої слова» прямо в лобі.
