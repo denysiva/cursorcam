@@ -134,7 +134,8 @@ function pieceWidth(piece) {
   return w;
 }
 function fitWord(word, cardW, cardH) {
-  const pieces = word.split(/\s+|(?<=-)/);
+  // No regex lookbehind here: older iPhones cannot even parse it.
+  const pieces = word.replace(/-/g, "- ").split(/\s+/).filter(Boolean);
   const widest = Math.max(...pieces.map(pieceWidth));
   const lines = pieces.length;
   const byWidth = (cardW - 11) / widest;
