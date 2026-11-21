@@ -7,18 +7,18 @@ import { ui } from "./sound.js";
 
 export const TEAM = {
   sun: {
-    name: "Сонце",
-    gen: "Сонця",
-    oracle: "Оракул Сонця",
-    banned: "Сонце відкрило карту БАН",
-    found: "Сонце знайшло всі свої карти",
+    name: "Банани",
+    gen: "Бананів",
+    oracle: "Капітан Бананів",
+    banned: "Банани відкрили Акулу",
+    found: "Банани знайшли всі свої карти",
   },
   moon: {
-    name: "Місяць",
-    gen: "Місяця",
-    oracle: "Оракул Місяця",
-    banned: "Місяць відкрив карту БАН",
-    found: "Місяць знайшов усі свої карти",
+    name: "Кокоси",
+    gen: "Кокосів",
+    oracle: "Капітан Кокосів",
+    banned: "Кокоси відкрили Акулу",
+    found: "Кокоси знайшли всі свої карти",
   },
 };
 
@@ -171,56 +171,57 @@ export function Icon({ name, size = 20, class: cls }) {
   );
 }
 
-/** The two team emblems, drawn rather than typed so they match everywhere. */
+/**
+ * The emblems, drawn rather than typed so they match everywhere: a banana and
+ * a coconut for the teams, a shark fin for the instant loss, a beach umbrella
+ * for the tourists. Solid shapes with an outline (its colour comes from
+ * `--glyph-line`), so they stay readable at 11px on any sticker.
+ */
 export function Glyph({ team, size = 18 }) {
+  const box = { width: size, height: size, viewBox: "0 0 24 24", "aria-hidden": "true" };
   if (team === "sun") {
     return (
-      <svg class="glyph glyph-sun" width={size} height={size} viewBox="0 0 24 24" aria-hidden="true">
-        <g fill="currentColor">
-          <circle cx="12" cy="12" r="4.6" />
-          {Array.from({ length: 8 }, (_, i) => (
-            <path d="M12 1.2l1.5 4.2h-3z" transform={`rotate(${i * 45} 12 12)`} />
-          ))}
-        </g>
+      <svg class="glyph glyph-sun" {...box}>
+        <path
+          class="g-fill"
+          d="M20.6 3.6C22.4 12.6 16.4 21.6 5.2 21.4 3.6 21.4 2.4 20.2 3.1 19 10.4 18.4 15.4 13 16.4 4.4L16 2.6l3.8-1z"
+        />
+        <path class="g-ink" d="M16 2.6l3.8-1 .6 2.1-4 .9z" />
       </svg>
     );
   }
   if (team === "moon") {
     return (
-      <svg class="glyph glyph-moon" width={size} height={size} viewBox="0 0 24 24" aria-hidden="true">
-        <path
-          fill="currentColor"
-          d="M15.5 2.6a9.6 9.6 0 100 18.8A7.6 7.6 0 0111 12a7.6 7.6 0 014.5-9.4z"
-        />
-        <path fill="currentColor" d="M18.2 7l.7 1.8 1.8.7-1.8.7-.7 1.8-.7-1.8-1.8-.7 1.8-.7z" />
+      <svg class="glyph glyph-moon" {...box}>
+        <path class="g-fill" d="M9 5l1.1-3.4L12 3.8l1.9-2.2L15 5z" />
+        <circle class="g-fill" cx="12" cy="12.8" r="8.6" />
+        <circle class="g-ink" cx="8.8" cy="10.9" r="1.55" />
+        <circle class="g-ink" cx="15.2" cy="10.9" r="1.55" />
+        <circle class="g-ink" cx="12" cy="15.7" r="1.55" />
       </svg>
     );
   }
   if (team === "ban") {
     return (
-      <svg class="glyph glyph-ban" width={size} height={size} viewBox="0 0 24 24" aria-hidden="true">
-        <circle cx="12" cy="12" r="8.4" fill="none" stroke="currentColor" stroke-width="2.6" />
-        <path d="M6.2 6.2l11.6 11.6" stroke="currentColor" stroke-width="2.6" />
+      <svg class="glyph glyph-ban" {...box}>
+        <path class="g-fill" d="M2.6 19.4C8 15.6 11.6 8.6 15.8 2.2 15.2 9 17.4 15 21.4 19.4z" />
+        <path class="g-line" d="M1.4 21.8q2.65-2 5.3 0t5.3 0 5.3 0 5.3 0" />
       </svg>
     );
   }
   return (
-    <svg class="glyph glyph-bot" width={size} height={size} viewBox="0 0 24 24" aria-hidden="true">
-      <g fill="currentColor">
-        <rect x="5" y="8" width="14" height="11" rx="2.5" />
-        <rect x="11.2" y="3.4" width="1.6" height="4" />
-        <circle cx="12" cy="3.2" r="1.6" />
-      </g>
-      <circle cx="9.3" cy="13" r="1.7" fill="#1a1230" />
-      <circle cx="14.7" cy="13" r="1.7" fill="#1a1230" />
+    <svg class="glyph glyph-bot" {...box}>
+      <path class="g-line" d="M12 12v9.4M8 21.6h8" />
+      <path class="g-fill" d="M2.2 12.6a9.8 9.8 0 0119.6 0z" />
+      <path fill="#fff" d="M12 3.4c-1.7 2.6-2.7 5.6-2.9 8.6h5.8c-.2-3-1.2-6-2.9-8.6z" />
     </svg>
   );
 }
 
 const AVATAR_COUNT = 16;
 export const AVATAR_NAMES = [
-  "Лис", "Сова", "Кіт", "Ворон", "Вовк", "Заєць", "Ведмідь", "Олень",
-  "Змія", "Жаба", "Метелик", "Короп", "Півень", "Цап", "Їжак", "Восьминіг",
+  "Ананас", "Манго", "Папуга", "Фламінго", "Краб", "Черепаха", "Тукан", "Ігуана",
+  "Зірка", "Кавун", "Коктейль", "Дельфін", "Папая", "Пелікан", "Рак", "Лайм",
 ];
 
 export function Avatar({ index, size = 36, class: cls, ring, off }) {

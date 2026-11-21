@@ -29,7 +29,7 @@ function Connecting() {
   return (
     <main class="gate gate-center">
       <div class="boot-eye" />
-      <p class="sub">Відчиняємо двері кімнати {state.room}…</p>
+      <p class="sub">Стелимо рушник у кімнаті {state.room}…</p>
     </main>
   );
 }
@@ -46,7 +46,7 @@ function Bye() {
   return (
     <main class="gate gate-center">
       <Ornament />
-      <h1 class="title">Двері зачинились</h1>
+      <h1 class="title">Пляж зачинено</h1>
       <p class="sub">{text}</p>
       <div class="home-actions">
         <Btn
@@ -57,7 +57,7 @@ function Bye() {
             enterRoom(room);
           }}
         >
-          Постукати ще раз
+          Спробувати ще раз
         </Btn>
         <Btn kind="ghost" block onClick={() => leaveRoom({ tellServer: false })}>
           На головну
@@ -72,7 +72,7 @@ function App() {
   const hasProfile = Boolean(s.profile.name);
   const inRoom = Boolean(s.room);
 
-  // Open the socket as soon as we know who is knocking and on which door.
+  // Open the socket as soon as we know who is coming and to which room.
   useEffect(() => {
     if (inRoom && hasProfile && s.conn === "idle") connect();
   }, [inRoom, hasProfile, s.conn]);

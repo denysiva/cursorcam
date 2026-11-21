@@ -37,21 +37,17 @@ cover.crop((0, top, w, top + ch)).resize((1200, 630), Image.LANCZOS).save(IMG / 
 # Avatars: 16 medallions on a transparent sheet -> one tight 4x4 sprite.
 sheet = Image.open(RAW / "avatars.png").convert("RGBA")
 alpha = np.array(sheet)[:, :, 3] > 128
-def runs(profile):
-    out, start = [], None
-    for i, v in enumerate(profile):
-        if v > 0.05 and start is None: start = i
-        if v <= 0.05 and start is not None: out.append((start, i)); start = None
-    if start is not None: out.append((start, len(profile)))
-    return out
-cols, rows = runs(alpha.mean(axis=0)), runs(alpha.mean(axis=1))
-assert len(cols) == 4 and len(rows) == 4, (cols, rows)
+# The sheet is an even 4x4 grid: take each quarter cell and crop it to the
+# medallion's own bounding box, so every avatar fills its tile edge to edge.
 CELL = 168
+H, W = alpha.shape
 sprite = Image.new("RGBA", (CELL * 4, CELL * 4), (0, 0, 0, 0))
-for r, (y0, y1) in enumerate(rows):
-    for c, (x0, x1) in enumerate(cols):
-        cell = alpha[y0:y1, x0:x1]
-        ys, xs = np.where(cell)
+for r in range(4):
+    for c in range(4):
+        x0, x1 = c * W // 4, (c + 1) * W // 4
+        y0, y1 = r * H // 4, (r + 1) * H // 4
+        ys, xs = np.where(alpha[y0:y1, x0:x1])
+        assert len(xs), (r, c)
         box = (x0 + xs.min(), y0 + ys.min(), x0 + xs.max() + 1, y0 + ys.max() + 1)
         tile = sheet.crop(box).resize((CELL, CELL), Image.LANCZOS)
         sprite.paste(tile, (c * CELL, r * CELL))

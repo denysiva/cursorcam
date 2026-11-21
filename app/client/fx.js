@@ -1,8 +1,9 @@
 /**
  * Two canvases behind and in front of the interface.
  *
- *   #sky — the night the game is played under: drifting, twinkling stars and
- *          the occasional shooting star. Its tint follows whose turn it is.
+ *   #sky — the beach the game is played on: glints of sunlight on the sea and
+ *          a few lazy bubbles drifting up. The scene itself (sky, sea, sand,
+ *          clouds, palms and the turn tint) is plain CSS.
  *   #fx  — bursts of sparks when a card opens, and the confetti of a win.
  *
  * Both stop drawing when there is nothing to draw or the tab is hidden, and
@@ -15,11 +16,11 @@ const calm = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 const DPR = Math.min(window.devicePixelRatio || 1, 2);
 
 const COLORS = {
-  sun: ["#ffd76a", "#ff9a3c", "#fff1b8", "#ff6f3c"],
-  moon: ["#b9f1f5", "#6fd0e6", "#8ea0ff", "#ffffff"],
-  bot: ["#d9cfbb", "#a39781", "#f3ead6"],
-  ban: ["#ff3355", "#ff7a8f", "#7a0d22", "#ffffff"],
-  gold: ["#fbe8ae", "#e2b356", "#fff6d8", "#c98f2f"],
+  sun: ["#ffe45c", "#ffc21a", "#fff6b8", "#e08a00"],
+  moon: ["#c7793a", "#8a4a1c", "#fff3d6", "#e9b98a"],
+  bot: ["#f5e6c4", "#d8c59c", "#fffaf0"],
+  ban: ["#ff4d5e", "#ff8f9a", "#1b2a49", "#0d1730", "#ffffff"],
+  gold: ["#ffe45c", "#ff4d5e", "#19c7ce", "#ffffff", "#ff8a5c", "#7be06a", "#1fa2ff"],
 };
 
 function fit(canvas) {
@@ -32,105 +33,125 @@ function fit(canvas) {
   return { w, h };
 }
 
-// ── the sky ────────────────────────────────────────────────────────────────
+// ── the sea ────────────────────────────────────────────────────────────────
+
+// The sea band of the CSS scene, as fractions of the screen height.
+const SEA_TOP = 0.435;
+const SEA_BOTTOM = 0.74;
 
 function startSky() {
   const canvas = document.getElementById("sky");
   if (!canvas) return;
   const g = canvas.getContext("2d");
   let size = fit(canvas);
-  let stars = [];
-  let shooting = null;
-  let nextShot = 4000;
+  let glints = [];
+  let bubbles = [];
 
-  function seed() {
-    const count = Math.round(Math.min(170, (size.w * size.h) / 5200));
-    stars = Array.from({ length: count }, () => ({
+  function bubble(anywhere) {
+    return {
       x: Math.random() * size.w,
-      y: Math.random() * size.h,
-      r: Math.random() < 0.08 ? 1.5 + Math.random() : 0.4 + Math.random() * 0.9,
+      y: anywhere ? Math.random() * size.h : size.h + 12,
+      r: 3 + Math.random() * 6,
+      rise: 7 + Math.random() * 11,
+      sway: 6 + Math.random() * 12,
       phase: Math.random() * Math.PI * 2,
-      speed: 0.4 + Math.random() * 1.4,
-      drift: 0.6 + Math.random() * 2.2,
-      warm: Math.random() < 0.3,
-    }));
+    };
+  }
+  function seed() {
+    const top = size.h * SEA_TOP;
+    const band = size.h * (SEA_BOTTOM - SEA_TOP);
+    glints = Array.from({ length: Math.round(Math.min(44, 14 + size.w / 14)) }, () => {
+      const depth = Math.random(); // 0 at the horizon, 1 at the shore
+      return {
+        x: Math.random() * size.w,
+        y: top + depth * band,
+        len: 4 + depth * 15,
+        thick: 1.2 + depth * 1.6,
+        phase: Math.random() * Math.PI * 2,
+        speed: 0.7 + Math.random() * 1.3,
+        drift: (2 + depth * 7) * (Math.random() < 0.5 ? -1 : 1),
+        star: Math.random() < 0.14,
+      };
+    });
+    bubbles = Array.from({ length: Math.round(Math.min(9, 4 + size.w / 180)) }, () => bubble(true));
   }
   seed();
-  window.addEventListener("resize", () => {
-    size = fit(canvas);
-    seed();
-    if (calm) draw(0, 0);
-  });
 
   function draw(t, dt) {
     g.setTransform(DPR, 0, 0, DPR, 0, 0);
     g.clearRect(0, 0, size.w, size.h);
-    for (const s of stars) {
-      s.y -= (s.drift * dt) / 1000;
-      if (s.y < -4) {
-        s.y = size.h + 4;
-        s.x = Math.random() * size.w;
-      }
-      const a = 0.25 + 0.75 * (0.5 + 0.5 * Math.sin(s.phase + (t / 1000) * s.speed));
-      g.globalAlpha = a * (s.r > 1.4 ? 0.95 : 0.7);
-      g.fillStyle = s.warm ? "#ffe2a8" : "#dfe6ff";
+    const sec = t / 1000;
+    g.strokeStyle = "#ffffff";
+    g.fillStyle = "#ffffff";
+    g.lineCap = "round";
+    for (const s of glints) {
+      s.x += (s.drift * dt) / 1000;
+      if (s.x < -20) s.x = size.w + 20;
+      else if (s.x > size.w + 20) s.x = -20;
+      const wave = Math.sin(s.phase + sec * s.speed);
+      if (wave <= 0) continue;
+      g.globalAlpha = wave * wave * 0.85;
+      g.lineWidth = s.thick;
       g.beginPath();
-      g.arc(s.x, s.y, s.r, 0, Math.PI * 2);
-      g.fill();
-      if (s.r > 1.4) {
-        g.globalAlpha = a * 0.35;
-        g.fillRect(s.x - s.r * 3.2, s.y - 0.4, s.r * 6.4, 0.8);
-        g.fillRect(s.x - 0.4, s.y - s.r * 3.2, 0.8, s.r * 6.4);
+      g.moveTo(s.x - (s.len * wave) / 2, s.y);
+      g.lineTo(s.x + (s.len * wave) / 2, s.y);
+      if (s.star) {
+        g.moveTo(s.x, s.y - s.len * 0.3 * wave);
+        g.lineTo(s.x, s.y + s.len * 0.3 * wave);
       }
+      g.stroke();
     }
-    if (shooting) {
-      shooting.life += dt;
-      const p = shooting.life / shooting.dur;
-      if (p >= 1) shooting = null;
-      else {
-        const x = shooting.x + shooting.dx * p;
-        const y = shooting.y + shooting.dy * p;
-        const tail = g.createLinearGradient(x, y, x - shooting.dx * 0.22, y - shooting.dy * 0.22);
-        tail.addColorStop(0, `rgba(255,244,214,${0.9 * (1 - p)})`);
-        tail.addColorStop(1, "rgba(255,244,214,0)");
-        g.globalAlpha = 1;
-        g.strokeStyle = tail;
-        g.lineWidth = 1.6;
-        g.beginPath();
-        g.moveTo(x, y);
-        g.lineTo(x - shooting.dx * 0.22, y - shooting.dy * 0.22);
-        g.stroke();
-      }
+    g.lineWidth = 1.4;
+    for (let i = 0; i < bubbles.length; i++) {
+      const b = bubbles[i];
+      b.y -= (b.rise * dt) / 1000;
+      if (b.y < -14) bubbles[i] = bubble(false);
+      const x = b.x + Math.sin(b.phase + sec * 0.6) * b.sway;
+      g.globalAlpha = 0.5;
+      g.beginPath();
+      g.arc(x, b.y, b.r, 0, Math.PI * 2);
+      g.stroke();
+      g.globalAlpha = 0.16;
+      g.fill();
+      g.globalAlpha = 0.8;
+      g.beginPath();
+      g.arc(x - b.r * 0.35, b.y - b.r * 0.35, b.r * 0.22, 0, Math.PI * 2);
+      g.fill();
     }
     g.globalAlpha = 1;
   }
 
+  window.addEventListener("resize", () => {
+    size = fit(canvas);
+    seed();
+    if (calm) draw(900, 0);
+  });
   if (calm) {
-    draw(0, 0);
+    draw(900, 0);
     return;
   }
-  let last = performance.now();
+
+  // About thirty frames a second is plenty for water, and nothing at all runs
+  // while the tab is hidden.
+  let last = 0;
+  let raf = 0;
   function frame(now) {
-    const dt = Math.min(now - last, 60);
+    raf = requestAnimationFrame(frame);
+    const dt = now - last;
+    if (dt < 30) return;
     last = now;
-    if (document.visibilityState === "visible") {
-      nextShot -= dt;
-      if (nextShot <= 0 && !shooting) {
-        nextShot = 7000 + Math.random() * 12000;
-        shooting = {
-          x: Math.random() * size.w * 0.7,
-          y: Math.random() * size.h * 0.35,
-          dx: size.w * (0.35 + Math.random() * 0.3),
-          dy: size.h * (0.12 + Math.random() * 0.14),
-          dur: 900 + Math.random() * 500,
-          life: 0,
-        };
-      }
-      draw(now, dt);
-    }
-    requestAnimationFrame(frame);
+    draw(now, Math.min(dt, 80));
   }
-  requestAnimationFrame(frame);
+  function wake() {
+    cancelAnimationFrame(raf);
+    raf = 0;
+    if (document.visibilityState === "visible") {
+      last = performance.now();
+      raf = requestAnimationFrame(frame);
+    }
+  }
+  document.addEventListener("visibilitychange", wake);
+  wake();
 }
 
 // ── sparks and confetti ────────────────────────────────────────────────────
@@ -175,6 +196,10 @@ function fxFrame(now) {
       }
       fx.closePath();
       fx.fill();
+      // A thin navy outline keeps pale sparks visible on white cards.
+      fx.lineWidth = 1;
+      fx.strokeStyle = "rgba(18,50,74,0.55)";
+      fx.stroke();
     } else {
       fx.beginPath();
       fx.arc(0, 0, p.size * k, 0, Math.PI * 2);

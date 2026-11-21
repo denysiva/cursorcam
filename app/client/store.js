@@ -4,7 +4,7 @@
  *
  * The server is authoritative. This file never decides anything about the game;
  * it sends intents and compares each new view with the previous one to find out
- * what changed (a card was opened, an omen arrived, the turn passed…).
+ * what changed (a card was opened, a clue arrived, the turn passed…).
  */
 
 import { useEffect, useState } from "./vendor/hooks.js";

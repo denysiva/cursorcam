@@ -11,7 +11,7 @@
  *
  *   * the player's PUBLIC id: a hash of the secret token their browser sent.
  *     Views list other players by public id, so knowing someone's id is not
- *     enough to rejoin as them (and read an Oracle's key);
+ *     enough to rejoin as them (and read a Captain's key);
  *   * `_now` and `_rand` on every action — time and randomness the rules may
  *     not produce themselves;
  *   * the server-only actions `_join`, `_presence` and `_timeout`.

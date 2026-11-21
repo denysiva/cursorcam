@@ -72,7 +72,7 @@ function Banner({ view, my }) {
             <Glyph team={team} size={12} /> {TEAM[team].oracle}
           </p>
           <p class="banner-line">
-            {iAmUp ? "Твій хід: придумай знамення" : `${oracle?.name || "Оракул"} шукає знамення`}
+            {iAmUp ? "Твій хід: придумай підказку" : `${oracle?.name || "Капітан"} думає над підказкою`}
             {!iAmUp && (
               <span class="dots">
                 <i />
@@ -90,7 +90,7 @@ function Banner({ view, my }) {
       <div class="banner-clue" key={g.turnNo}>
         <div class="banner-clue-main">
           <p class="banner-eyebrow">
-            <Glyph team={team} size={12} /> Знамення {TEAM[team].gen}
+            <Glyph team={team} size={12} /> Підказка {TEAM[team].gen}
           </p>
           <p class="clue-word" style={{ "--len": Math.max(g.clue.word.length, 6) }}>
             {g.clue.word}
@@ -315,7 +315,7 @@ function Dock({ view, my, canGuess, canClue, onClue }) {
     return (
       <footer class={cx("dock", `dock-${team}`)}>
         <Btn kind={team} block onClick={onClue} icon="eye">
-          Дати знамення
+          Дати підказку
         </Btn>
         <p class="dock-hint">Одне слово і число: скільки карт воно поєднує</p>
       </footer>
@@ -376,10 +376,10 @@ function Dock({ view, my, canGuess, canClue, onClue }) {
   } else if (my.team === team) {
     line =
       my.role === "oracle"
-        ? "Твої Шукачі думають. Жодних підказок, навіть бровою!"
+        ? "Твої Гравці думають. Жодних натяків, навіть бровою!"
         : `${TEAM[team].oracle} думає. Готуйся шукати`;
   } else {
-    line = g.stage === "clue" ? `Хід ${TEAM[team].gen}: чекаємо знамення` : `${TEAM[team].name} шукає свої карти`;
+    line = g.stage === "clue" ? `Хід ${TEAM[team].gen}: чекаємо підказку` : `${TEAM[team].name} шукають свої карти`;
   }
 
   return (
@@ -390,10 +390,10 @@ function Dock({ view, my, canGuess, canClue, onClue }) {
       {(!my || !my.team) && !g.sawKey ? (
         <div class="dock-row">
           <Btn kind="sun" small class="grow" onClick={() => act({ t: "seat", team: "sun", role: "seeker" })}>
-            До Сонця
+            До {TEAM.sun.gen}
           </Btn>
           <Btn kind="moon" small class="grow" onClick={() => act({ t: "seat", team: "moon", role: "seeker" })}>
-            До Місяця
+            До {TEAM.moon.gen}
           </Btn>
         </div>
       ) : (
@@ -403,7 +403,7 @@ function Dock({ view, my, canGuess, canClue, onClue }) {
   );
 }
 
-// ── giving an omen ─────────────────────────────────────────────────────────
+// ── giving a clue ──────────────────────────────────────────────────────────
 
 const NUMBERS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 0, -1];
 
@@ -419,7 +419,7 @@ function ClueSheet({ team, onClose }) {
     e?.preventDefault();
     const clean = word.replace(/\s+/g, " ").trim();
     if (!clean) {
-      toast("Напиши слово-знамення", "error");
+      toast("Напиши слово-підказку", "error");
       input.current?.focus();
       return;
     }
@@ -434,7 +434,7 @@ function ClueSheet({ team, onClose }) {
     <div class="clue-wrap" onClick={(e) => e.target === e.currentTarget && onClose()}>
       <form class={cx("clue-sheet", `clue-sheet-${team}`)} onSubmit={submit}>
         <header>
-          <h2>Твоє знамення</h2>
+          <h2>Твоя підказка</h2>
           <button type="button" class="icon-btn" onClick={onClose} aria-label="Закрити">
             <Icon name="close" />
           </button>
@@ -451,7 +451,7 @@ function ClueSheet({ team, onClose }) {
           autocorrect="off"
           spellcheck={false}
           enterkeyhint="done"
-          aria-label="Слово-знамення"
+          aria-label="Слово-підказка"
         />
         <p class="label">Скільки карт воно поєднує</p>
         <div class="num-grid">
@@ -491,7 +491,7 @@ export function Announce() {
     content = (
       <>
         <p class="ann-eyebrow">
-          <Glyph team={a.team} size={14} /> Знамення {TEAM[a.team].gen}
+          <Glyph team={a.team} size={14} /> Підказка {TEAM[a.team].gen}
         </p>
         <p class="ann-word" style={{ "--len": Math.max(a.word.length, 5) }}>
           {a.word.split("").map((ch, i) => (
@@ -517,7 +517,7 @@ export function Announce() {
       <>
         <p class="ann-eyebrow">Раунд {a.round}</p>
         <p class="ann-title">
-          <Glyph team={a.team} size={30} /> Починає {TEAM[a.team].name}
+          <Glyph team={a.team} size={30} /> Починають {TEAM[a.team].name}
         </p>
       </>
     );
@@ -532,11 +532,11 @@ export function Announce() {
 // ── the end of a round ─────────────────────────────────────────────────────
 
 const AWARD = {
-  omen: (a) => ({ icon: "eye", title: "Знамення раунду", text: `«${a.word}» від ${a.name}: ${a.n} ${plural(a.n, ["влучання", "влучання", "влучань"])}` }),
-  seer: (a) => ({ icon: "crown", title: "Провидець", text: `${a.name}: ${a.n} ${plural(a.n, ["своя карта", "свої карти", "своїх карт"])}` }),
-  ban: (a) => ({ icon: "x", title: "Рука долі", text: `Карту БАН відкриває ${a.name}` }),
+  omen: (a) => ({ icon: "eye", title: "Підказка раунду", text: `«${a.word}» від ${a.name}: ${a.n} ${plural(a.n, ["влучання", "влучання", "влучань"])}` }),
+  seer: (a) => ({ icon: "crown", title: "Зірка пляжу", text: `${a.name}: ${a.n} ${plural(a.n, ["своя карта", "свої карти", "своїх карт"])}` }),
+  ban: (a) => ({ icon: "x", title: "Корм для акули", text: `Акулу будить ${a.name}` }),
   gift: (a) => ({ icon: "swap", title: "Щедра душа", text: `${a.name}: ${a.n} ${plural(a.n, ["карта", "карти", "карт"])} у подарунок суперникам` }),
-  bot: (a) => ({ icon: "dice", title: "Друг ботів", text: `${a.name}: ${a.n} ${plural(a.n, ["бот", "боти", "ботів"])}` }),
+  bot: (a) => ({ icon: "dice", title: "Друг туристів", text: `${a.name}: ${a.n} ${plural(a.n, ["турист", "туристи", "туристів"])}` }),
 };
 
 function Over({ view, my, onPeek }) {
@@ -555,7 +555,7 @@ function Over({ view, my, onPeek }) {
           <img src={`/img/oracle-${w}.webp`} alt="" />
         </div>
         <p class="over-eyebrow">
-          {mineWon === null ? "Раунд завершено" : mineWon ? "Твоя команда перемогла" : "Цього разу не ваша ніч"}
+          {mineWon === null ? "Раунд завершено" : mineWon ? "Твоя команда перемогла" : "Цього разу не ваша хвиля"}
         </p>
         <h1 class="over-title">
           Перемога {TEAM[w].gen}
@@ -597,11 +597,11 @@ function Over({ view, my, onPeek }) {
         {host ? (
           <div class="over-actions">
             <Btn kind="gold" block onClick={() => act({ t: "start", mode: "rotate" })}>
-              Ще раунд, нові Оракули
+              Ще раунд, нові Капітани
             </Btn>
             <div class="dock-row">
               <Btn kind="ghost" small class="grow" onClick={() => act({ t: "start" })}>
-                Ті самі Оракули
+                Ті самі Капітани
               </Btn>
               <Btn kind="ghost" small class="grow" onClick={() => act({ t: "toLobby" })}>
                 У лобі
@@ -673,7 +673,7 @@ export function Game() {
     if (canClue || canGuess) buzz([0, 40, 60, 40]);
   }, [canClue, canGuess]);
 
-  const role = !my?.team ? "Глядач" : my.role === "oracle" ? "Оракул" : "Шукач";
+  const role = !my?.team ? "Глядач" : my.role === "oracle" ? "Капітан" : "Гравець";
 
   return (
     <main class={cx("game", `turn-${g.turn}`, my?.team && `my-${my.team}`)} data-phase={view.phase}>

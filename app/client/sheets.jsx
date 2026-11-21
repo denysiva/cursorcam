@@ -27,8 +27,8 @@ function QR({ text }) {
   }, [text]);
   return (
     <svg class="qr" viewBox={`-2 -2 ${path.n + 4} ${path.n + 4}`} role="img" aria-label="QR-код кімнати" shape-rendering="crispEdges">
-      <rect x="-2" y="-2" width={path.n + 4} height={path.n + 4} fill="#f6ecd4" rx="1.5" />
-      <path d={path.d} fill="#1a1230" />
+      <rect x="-2" y="-2" width={path.n + 4} height={path.n + 4} fill="#ffffff" rx="1.5" />
+      <path d={path.d} fill="#12324A" />
     </svg>
   );
 }
@@ -46,7 +46,7 @@ function ShareSheet() {
   const share = async () => {
     if (navigator.share) {
       try {
-        await navigator.share({ title: "Оракул", text: `Заходь у гру «Оракул», кімната ${state.room}`, url: link });
+        await navigator.share({ title: "Коко Банан", text: `Заходь у гру «Коко Банан», кімната ${state.room}`, url: link });
         return;
       } catch {
         /* cancelled */
@@ -132,7 +132,7 @@ function MenuSheet() {
             <Avatar index={my.avatar} size={44} />
             <span class="row-text">
               <b>{my.name}</b>
-              <i>Змінити імʼя або тотем</i>
+              <i>Змінити імʼя або героя</i>
             </span>
           </button>
         )}
@@ -221,7 +221,7 @@ function PlayersSheet() {
                           {p.id === s.you && <em> · це ти</em>}
                         </b>
                         <i>
-                          {team ? (p.role === "oracle" ? "Оракул" : "Шукач") : "Не в команді"}
+                          {team ? (p.role === "oracle" ? "Капітан" : "Гравець") : "Не в команді"}
                           {p.id === view.hostId && " · ведучий"}
                           {!p.online && " · не на звʼязку"}
                         </i>
@@ -265,10 +265,10 @@ function PlayerSheet({ pid }) {
                 <Glyph team={team} size={14} /> {TEAM[team].name}
               </p>
               <Btn kind={team} small block onClick={() => move(team, "oracle")}>
-                Оракул
+                Капітан
               </Btn>
               <Btn kind="ghost" small block onClick={() => move(team, "seeker")}>
-                Шукач
+                Гравець
               </Btn>
             </div>
           ))}
@@ -366,7 +366,7 @@ function SettingsSheet() {
               { value: 180, label: "3 хв" },
             ]}
           />
-          <p class="hint">Таймер окремо на знамення і на пошук. Влучив у свою карту — плюс 15 секунд.</p>
+          <p class="hint">Таймер окремо на підказку і на пошук. Влучили у свою карту — плюс 15 секунд.</p>
         </div>
 
         <div class="field">
@@ -381,13 +381,13 @@ function SettingsSheet() {
           />
           <p class="hint">
             {st.pick === "vote"
-              ? "Карта відкривається, коли за неї більшість Шукачів команди. Для великих компаній."
-              : "Будь-який Шукач обирає карту і підтверджує. Швидко й азартно."}
+              ? "Карта відкривається, коли за неї більшість Гравців команди. Для великих компаній."
+              : "Будь-хто з Гравців обирає карту і підтверджує. Швидко й азартно."}
           </p>
         </div>
 
         <div class="field">
-          <label>Карти БАН на полі</label>
+          <label>Акули на полі</label>
           <Seg
             value={st.bans}
             onChange={(bans) => set({ bans })}
@@ -467,7 +467,7 @@ function RulesSheet() {
     <Sheet title="Як грати" onClose={close} tall>
       <div class="rules">
         <p class="rules-lead">
-          Дві команди — <b class="c-sun">Сонце</b> і <b class="c-moon">Місяць</b> — шукають свої карти на спільному полі слів.
+          Дві команди — <b class="c-sun">{TEAM.sun.name}</b> і <b class="c-moon">{TEAM.moon.name}</b> — шукають свої карти на спільному полі слів.
           Хто першим знайде всі свої, той і переміг.
         </p>
 
@@ -475,25 +475,25 @@ function RulesSheet() {
           <li>
             <span class="step-n">1</span>
             <div>
-              <h3>Оракул бачить усе</h3>
-              <p>У кожної команди є Оракул. Лише він знає, які слова чиї. Решта команди — Шукачі.</p>
+              <h3>Капітан бачить усе</h3>
+              <p>У кожної команди є Капітан, і лише Капітан знає, які слова чиї. Решта команди — Гравці.</p>
             </div>
           </li>
           <li>
             <span class="step-n">2</span>
             <div>
-              <h3>Знамення: слово і число</h3>
+              <h3>Підказка: слово і число</h3>
               <p>
-                Оракул називає одне слово, яке поєднує кілька карт його команди, і число — скільки саме. Наприклад:
-                <b> «КОСМОС, 3»</b>.
+                Капітан називає одне слово, яке поєднує кілька карт своєї команди, і число — скільки саме. Наприклад:
+                <b> «МОРЕ, 3»</b>.
               </p>
             </div>
           </li>
           <li>
             <span class="step-n">3</span>
             <div>
-              <h3>Шукачі відкривають карти</h3>
-              <p>Радьтесь уголос і відкривайте карти по одній. Спроб на одну більше, ніж число у знаменні. Після першої карти можна зупинитись.</p>
+              <h3>Гравці відкривають карти</h3>
+              <p>Радьтесь уголос і відкривайте карти по одній. Спроб на одну більше, ніж число в підказці. Після першої карти можна зупинитись.</p>
             </div>
           </li>
         </ol>
@@ -517,25 +517,25 @@ function RulesSheet() {
           <li>
             <img src="/img/card-bot.webp" alt="" loading="lazy" />
             <div>
-              <b>Бот</b>
-              <p>Нічия карта. Клік у порожнечу, хід переходить.</p>
+              <b>Турист</b>
+              <p>Нічия карта. Турист дрімає під парасолькою, хід переходить.</p>
             </div>
           </li>
           <li>
             <img src="/img/card-ban.webp" alt="" loading="lazy" />
             <div>
-              <b>БАН</b>
-              <p>Відкрили — миттєво програли раунд.</p>
+              <b>Акула</b>
+              <p>Відкрили Акулу — миттєво програли раунд.</p>
             </div>
           </li>
         </ul>
 
-        <h3 class="rules-h">Кодекс Оракула</h3>
+        <h3 class="rules-h">Кодекс Капітана</h3>
         <ul class="bullets">
           <li>Лише одне слово і число. Жодних жестів, інтонацій і «ну майже».</li>
           <li>Не можна називати слово, яке лежить на столі, або його частину.</li>
           <li>Число 0 означає «жодна наша карта не про це», ∞ знімає ліміт спроб.</li>
-          <li>Поки команда шукає, Оракул мовчить і тримає обличчя.</li>
+          <li>Поки команда шукає, Капітан мовчить і тримає обличчя.</li>
         </ul>
       </div>
     </Sheet>
@@ -544,7 +544,7 @@ function RulesSheet() {
 
 // ── log ────────────────────────────────────────────────────────────────────
 
-const TYPE_LABEL = { sun: "карта Сонця", moon: "карта Місяця", bot: "бот", ban: "БАН" };
+const TYPE_LABEL = { sun: `карта ${TEAM.sun.gen}`, moon: `карта ${TEAM.moon.gen}`, bot: "Турист", ban: "Акула" };
 
 function LogSheet() {
   const s = useStore();

@@ -13,7 +13,7 @@ export function settingsSummary(view) {
     `Поле 5×${s.rows}`,
     s.timer ? `${s.timer} с на хід` : "Без таймера",
     s.pick === "vote" ? "Голосування" : "Хто перший",
-    `${s.bans} ${plural(s.bans, ["БАН", "БАНи", "БАНів"])}`,
+    `${s.bans} ${plural(s.bans, ["акула", "акули", "акул"])}`,
     names.join(" + "),
   ];
 }
@@ -98,15 +98,13 @@ function TeamPanel({ team }) {
           <h2>
             <Glyph team={team} size={15} /> {TEAM[team].name}
           </h2>
-          <p>
-            {list.length} {plural(list.length, ["гравець", "гравці", "гравців"])}
-          </p>
+          <p>{list.length} у команді</p>
         </div>
       </header>
 
       <div class="slot">
         <span class="slot-label">
-          <Icon name="eye" size={13} /> Оракул
+          <Icon name="eye" size={13} /> Капітан
         </span>
         {oracle ? (
           <ul class="who-list">
@@ -114,14 +112,14 @@ function TeamPanel({ team }) {
           </ul>
         ) : (
           <button class="slot-empty" onClick={() => act({ t: "seat", team, role: "oracle" })}>
-            <Icon name="plus" size={15} /> Стати Оракулом
+            <Icon name="plus" size={15} /> Стати Капітаном
           </button>
         )}
       </div>
 
       <div class="slot slot-grow">
         <span class="slot-label">
-          <Icon name="users" size={13} /> Шукачі
+          <Icon name="users" size={13} /> Гравці
         </span>
         {seekers.length ? (
           <ul class="who-list">
@@ -146,7 +144,7 @@ function TeamPanel({ team }) {
       )}
       {iAmOracle && (
         <Btn kind="ghost" small block onClick={() => act({ t: "seat", team, role: "seeker" })}>
-          Стати Шукачем
+          Стати Гравцем
         </Btn>
       )}
     </section>
@@ -179,7 +177,7 @@ export function Lobby() {
               </span>
             </p>
           ) : (
-            <p class="sub">У кожної команди — один Оракул і хоча б один Шукач</p>
+            <p class="sub">У кожної команди — один Капітан і хоча б один Гравець</p>
           )}
         </div>
 

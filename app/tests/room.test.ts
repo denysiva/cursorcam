@@ -89,9 +89,9 @@ describe("room", () => {
   it("plays a turn end to end and never sends the key to a Seeker", async () => {
     const room = freshRoom();
     const host = await join(room, "t-host", "Ведучий");
-    const s1 = await join(room, "t-s1", "Шукач");
-    const m = await join(room, "t-m", "Місяць");
-    const m1 = await join(room, "t-m1", "Шукачка");
+    const s1 = await join(room, "t-s1", "Гравець");
+    const m = await join(room, "t-m", "Кокос");
+    const m1 = await join(room, "t-m1", "Гравчиня");
     const act = (c: typeof host, action: Msg) => c.send({ type: "action", action });
 
     act(host, { t: "seat", team: "sun", role: "oracle" });

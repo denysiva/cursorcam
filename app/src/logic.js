@@ -1,10 +1,15 @@
 /**
- * ОРАКУЛ — the rules.
+ * КОКО БАНАН — the rules.
  *
- * A team word-association game. Two teams (Sun and Moon) share one grid of
- * words. Each team has an Oracle who alone sees which words belong to whom and
- * gives one-word "omens" (a word + a number); the team's Seekers open cards.
- * Open all of your cards first to win; open a BAN card and you lose on the spot.
+ * A team word-association game. Two teams (Bananas and Coconuts) share one grid
+ * of words. Each team has a Captain who alone sees which words belong to whom
+ * and gives one-word clues (a word + a number); the team's Players open cards.
+ * Open all of your cards first to win; open a Shark and you lose on the spot.
+ *
+ * The ids in the code and on the wire keep their first names. What players read
+ * → what the code says: Bananas → `sun`, Coconuts → `moon`, Captain → `oracle`,
+ * Player → `seeker`, Tourist (nobody's card) → `bot`, Shark → `ban`. Comments
+ * below use the code's names.
  *
  * This module is PURE: no imports, no clock, no randomness of its own. The room
  * (src/room.ts) injects two trusted fields into every action before it gets
@@ -16,7 +21,7 @@
  * `isGameOver` always answers "no": a finished round is just another phase.
  */
 
-export const meta = { game: "Оракул", minPlayers: 1, maxPlayers: 60 };
+export const meta = { game: "Коко Банан", minPlayers: 1, maxPlayers: 60 };
 
 // ── constants ──────────────────────────────────────────────────────────────
 
@@ -402,9 +407,9 @@ function rotateOracles(s) {
 
 function readyProblem(s) {
   for (const t of ["sun", "moon"]) {
-    const label = t === "sun" ? "Сонця" : "Місяця";
-    if (!oracleOf(s, t)) return `Команді ${label} потрібен Оракул`;
-    if (seekersOf(s, t).length < 1) return `Команді ${label} потрібен хоча б один Шукач`;
+    const label = t === "sun" ? "Бананів" : "Кокосів";
+    if (!oracleOf(s, t)) return `Команді ${label} потрібен Капітан`;
+    if (seekersOf(s, t).length < 1) return `Команді ${label} потрібен хоча б один Гравець`;
   }
   return null;
 }
@@ -425,7 +430,7 @@ function applySettings(s, patch) {
     next.pick = patch.pick;
   }
   if ("bans" in patch) {
-    if (![1, 2, 3].includes(patch.bans)) return "Невірна кількість карт БАН";
+    if (![1, 2, 3].includes(patch.bans)) return "Невірна кількість акул";
     next.bans = patch.bans;
   }
   if ("custom" in patch) {
@@ -447,7 +452,7 @@ function applySettings(s, patch) {
     const ids = [...new Set(patch.packs)].filter(
       (id) => (id === "custom" && next.custom.length > 0) || Boolean(PACKS[id]),
     );
-    if (!ids.length) return "Оберіть хоча б один набір слів";
+    if (!ids.length) return "Обери хоча б один набір слів";
     next.packs = ids;
   }
   s.settings = next;
@@ -513,12 +518,12 @@ function run(state, pid, a) {
   }
   if (a.t.startsWith("_")) return fail("Невідома дія");
 
-  if (!me) return fail("Спершу увійдіть у кімнату");
+  if (!me) return fail("Спершу увійди в кімнату");
 
   switch (a.t) {
     case "profile": {
       const name = cleanName(a.name);
-      if (!name) return fail("Вкажіть імʼя");
+      if (!name) return fail("Вкажи імʼя");
       me.name = name;
       if (Number.isInteger(a.avatar) && a.avatar >= 0 && a.avatar < AVATARS) me.avatar = a.avatar;
       return done();
@@ -531,7 +536,7 @@ function run(state, pid, a) {
       if (s.phase === "play") {
         const saw = g.sawKey.includes(pid);
         if (team === null) {
-          if (me.role === "oracle" && me.team) return fail("Оракул не може покинути гру посеред раунду");
+          if (me.role === "oracle" && me.team) return fail("Капітан не може покинути гру посеред раунду");
           seat(s, me, null, "seeker");
           delete g.marks[pid];
           return done();
@@ -539,13 +544,13 @@ function run(state, pid, a) {
         if (me.team && me.team !== team) return fail("Змінити команду можна після раунду");
         if (g.bound[pid] && g.bound[pid] !== team) return fail("Змінити команду можна після раунду");
         if (role === "seeker") {
-          if (saw) return fail("Ви вже бачили ключ цього раунду");
+          if (saw) return fail("Ти вже знаєш ключ цього раунду");
           seat(s, me, team, "seeker");
           g.bound[pid] = team;
           return done();
         }
         const current = oracleOf(s, team);
-        if (current && current.id !== pid && current.online) return fail("У цієї команди вже є Оракул");
+        if (current && current.id !== pid && current.online) return fail("У цієї команди вже є Капітан");
         if (current && current.id !== pid) {
           // The Oracle being replaced knows the key: they sit the round out.
           current.role = "seeker";
@@ -561,7 +566,7 @@ function run(state, pid, a) {
       if (team && role === "oracle") {
         const current = oracleOf(s, team);
         if (current && current.id !== pid) {
-          if (current.online) return fail("У цієї команди вже є Оракул");
+          if (current.online) return fail("У цієї команди вже є Капітан");
           current.role = "seeker";
         }
       }
@@ -610,10 +615,10 @@ function run(state, pid, a) {
         const saw = g.sawKey.includes(p.id);
         if (p.team && team && p.team !== team) return fail("Змінити команду можна після раунду");
         if (team && g.bound[p.id] && g.bound[p.id] !== team) return fail("Змінити команду можна після раунду");
-        if (team && role === "seeker" && saw) return fail("Гравець уже бачив ключ цього раунду");
+        if (team && role === "seeker" && saw) return fail("Ця людина вже знає ключ цього раунду");
         if (team) g.bound[p.id] = team;
         if (team === null && p.role === "oracle" && p.team) {
-          return fail("Спершу призначте іншого Оракула");
+          return fail("Спершу признач іншого Капітана");
         }
         if (team && role === "oracle" && !saw) g.sawKey.push(p.id);
         delete g.marks[p.id];
@@ -678,13 +683,13 @@ function run(state, pid, a) {
     case "clue": {
       if (s.phase !== "play") return fail("Раунд не йде");
       if (me.team !== g.turn || me.role !== "oracle") return fail("Зараз не ваш хід");
-      if (g.stage !== "clue") return fail("Знамення вже дано");
+      if (g.stage !== "clue") return fail("Підказку вже дано");
       const word = cleanText(a.word, CLUE_MAX).toUpperCase();
-      if (!word) return fail("Напишіть слово-знамення");
+      if (!word) return fail("Напиши слово-підказку");
       if (!/^[\p{L}\p{N}'\- ]+$/u.test(word) || !/\p{L}/u.test(word)) {
         return fail("Лише літери, цифри та дефіс");
       }
-      if (word.split(" ").length > 2) return fail("Знамення — це одне слово (максимум два)");
+      if (word.split(" ").length > 2) return fail("Підказка — це одне слово (максимум два)");
       const n = a.n;
       if (!Number.isInteger(n) || n < -1 || n > 9) return fail("Число має бути від 0 до 9 або ∞");
       const problem = clueProblem(g, word);
@@ -700,8 +705,8 @@ function run(state, pid, a) {
     case "mark": {
       if (s.phase !== "play") return fail("Раунд не йде");
       if (me.team !== g.turn || me.role !== "seeker") return fail("Зараз не ваш хід");
-      if (g.sawKey.includes(pid)) return fail("Ви вже бачили ключ цього раунду");
-      if (g.stage !== "guess") return fail("Чекаємо на знамення Оракула");
+      if (g.sawKey.includes(pid)) return fail("Ти вже знаєш ключ цього раунду");
+      if (g.stage !== "guess") return fail("Чекаємо на підказку Капітана");
       const i = a.i;
       const vote = s.settings.pick === "vote";
       if (i === -1) {
@@ -718,8 +723,8 @@ function run(state, pid, a) {
     case "pick": {
       if (s.phase !== "play") return fail("Раунд не йде");
       if (me.team !== g.turn || me.role !== "seeker") return fail("Зараз не ваш хід");
-      if (g.sawKey.includes(pid)) return fail("Ви вже бачили ключ цього раунду");
-      if (g.stage !== "guess") return fail("Чекаємо на знамення Оракула");
+      if (g.sawKey.includes(pid)) return fail("Ти вже знаєш ключ цього раунду");
+      if (g.stage !== "guess") return fail("Чекаємо на підказку Капітана");
       if (s.settings.pick === "vote") return fail("У цьому режимі карту відкриває голосування");
       const i = a.i;
       if (!Number.isInteger(i) || i < 0 || i >= g.words.length || g.revealed[i]) {
@@ -731,8 +736,8 @@ function run(state, pid, a) {
     case "pass": {
       if (s.phase !== "play") return fail("Раунд не йде");
       if (me.team !== g.turn || me.role !== "seeker") return fail("Зараз не ваш хід");
-      if (g.sawKey.includes(pid)) return fail("Ви вже бачили ключ цього раунду");
-      if (g.stage !== "guess") return fail("Чекаємо на знамення Оракула");
+      if (g.sawKey.includes(pid)) return fail("Ти вже знаєш ключ цього раунду");
+      if (g.stage !== "guess") return fail("Чекаємо на підказку Капітана");
       if (s.settings.pick === "vote") return fail("У цьому режимі хід завершує голосування");
       if (g.made < 1) return fail("Спершу відкрийте хоча б одну карту");
       pushLog(g, { k: "pass", team: g.turn, by: pid, name: me.name, turn: g.turnNo });

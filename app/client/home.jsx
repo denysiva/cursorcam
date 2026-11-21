@@ -7,6 +7,9 @@ import { Avatar, AVATAR_NAMES, Btn, Glyph, Ornament, cx } from "./bits.jsx";
 import { cleanRoomCode, enterRoom, makeRoomCode, openSheet, setProfile, state, toast, useStore } from "./store.js";
 import { ui } from "./sound.js";
 
+/** The crew this game is for: one tap instead of typing a name. Guests type their own below. */
+export const TEAM_NAMES = ["Денис", "Люда", "Олег", "Стефа", "Сергій", "Віта", "Назар", "Роксолана", "Славік", "Женя"];
+
 export function Home() {
   const [joining, setJoining] = useState(false);
   const [code, setCode] = useState("");
@@ -37,10 +40,10 @@ export function Home() {
         <p class="eyebrow">
           <Glyph team="sun" size={14} /> командна гра натяків <Glyph team="moon" size={14} />
         </p>
-        <h1 class="logo" data-text="ОРАКУЛ">
-          ОРАКУЛ
+        <h1 class="logo" data-text="КОКО БАНАН">
+          <span>КОКО</span> <span>БАНАН</span>
         </h1>
-        <p class="tagline">Одне слово. Багато здогадок. І карта, якої краще не торкатися.</p>
+        <p class="tagline">Одне слово. Багато здогадок. І акула, якої краще не будити.</p>
 
         {!joining ? (
           <div class="home-actions">
@@ -83,7 +86,7 @@ export function Home() {
   );
 }
 
-const NAME_IDEAS = ["Провидець", "Містик", "Зоря", "Ворожка", "Пророк", "Чаклун", "Мольфар", "Знахар"];
+const NAME_IDEAS = ["Манго", "Бриз", "Хвиля", "Папая", "Краб", "Пальма", "Меренге", "Маракуя"];
 
 /** Name + avatar. Shown before the first room, and from the menu afterwards. */
 export function Profile({ onDone, first }) {
@@ -91,10 +94,6 @@ export function Profile({ onDone, first }) {
   const [name, setName] = useState(s.profile.name || "");
   const [avatar, setAvatar] = useState(s.profile.avatar ?? Math.floor(Math.random() * 16));
   const input = useRef(null);
-
-  useEffect(() => {
-    if (first && !name) input.current?.focus();
-  }, []);
 
   const submit = (e) => {
     e?.preventDefault();
@@ -110,10 +109,27 @@ export function Profile({ onDone, first }) {
 
   return (
     <form class="profile" onSubmit={submit}>
+      <p class="label">Хто ти?</p>
+      <div class="name-chips">
+        {TEAM_NAMES.map((n) => (
+          <button
+            type="button"
+            class={cx("name-chip", name === n && "is-on")}
+            onClick={() => {
+              ui.mark();
+              setName(n);
+            }}
+            aria-pressed={name === n}
+          >
+            {n}
+          </button>
+        ))}
+      </div>
+
       <div class="profile-me">
         <Avatar index={avatar} size={92} class="profile-avatar" key={avatar} />
         <div class="profile-field">
-          <label for="name">Твоє імʼя</label>
+          <label for="name">або впиши імʼя</label>
           <input
             id="name"
             ref={input}
@@ -128,7 +144,7 @@ export function Profile({ onDone, first }) {
         </div>
       </div>
 
-      <p class="label">Обери тотем</p>
+      <p class="label">Обери героя</p>
       <div class="avatar-grid">
         {AVATAR_NAMES.map((label, i) => (
           <button
@@ -147,7 +163,7 @@ export function Profile({ onDone, first }) {
       </div>
 
       <Btn kind="gold" block type="submit">
-        {first ? "Увійти в кімнату" : "Зберегти"}
+        {first ? "Гайда на пляж" : "Зберегти"}
       </Btn>
     </form>
   );
@@ -158,9 +174,9 @@ export function ProfileGate() {
   return (
     <main class="gate">
       <Ornament />
-      <h1 class="title">Хто заходить?</h1>
+      <h1 class="title">Хто на пляжі?</h1>
       <p class="sub">
-        Кімната <b class="mono">{state.room}</b> чекає. Назвися й обери тотем, щоб команда тебе впізнала.
+        Кімната <b class="mono">{state.room}</b> чекає. Назвися й обери героя, щоб команда тебе впізнала.
       </p>
       <Profile first />
     </main>
