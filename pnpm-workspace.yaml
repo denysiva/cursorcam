@@ -1,4 +1,0 @@
-packages:
-  - site
-allowBuilds:
-  unrs-resolver: true
